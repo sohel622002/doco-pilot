@@ -5,15 +5,13 @@ import api from "../lib/axios";
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
-  const [status, setStatus] = useState("verifying"); // verifying | success | error
-  const [error, setError] = useState("");
+  const [status, setStatus] = useState(() => (token ? "verifying" : "error"));
+  const [error, setError] = useState(() =>
+    token ? "" : "Missing verification token.",
+  );
 
   useEffect(() => {
-    if (!token) {
-      setStatus("error");
-      setError("Missing verification token.");
-      return;
-    }
+    if (!token) return;
 
     api
       .post("/api/auth/verify-email", { token })

@@ -1,10 +1,9 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 import { useParams } from "react-router-dom";
 import { WS_ACTIONS } from "../lib/actions";
 import { useSystemStore } from "../store/system";
 import { useContainerStore } from "../store/container";
-import NodConnectionError from "../components/NodConnectionError";
 
 export default function Home() {
   const { serverId } = useParams();
@@ -187,7 +186,7 @@ export default function Home() {
             </div>
           ) : (
             <div className="flex-1 relative flex items-end justify-between gap-base px-xs">
-              {history.map((sample, i) => (
+              {history.map((sample) => (
                 <div key={sample.ts} className="w-full flex flex-col gap-0.5 justify-end h-full">
                   <div
                     className="w-full bg-primary rounded-t-sm"

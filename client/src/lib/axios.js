@@ -18,7 +18,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const response = await api.post("/api/auth/refresh");
+        await api.post("/api/auth/refresh");
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem("access_token");

@@ -1,22 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 import { useParams } from "react-router-dom";
 import { WS_ACTIONS } from "../lib/actions";
 import { useContainerStore } from "../store/container";
-import { Box, Cuboid, FileText, Info, Pause, Play, RefreshCw, Square, Trash2 } from "lucide-react";
+import { Box, FileText, Info, Pause, Play, RefreshCw, Square, Trash2 } from "lucide-react";
 import Spinner from "../components/Spinner";
 import LogsModal from "../components/LogsModal";
 import InspectModal from "../components/InspectModal";
 import DeployContainerModal from "../components/DeployContainerModal";
 import { useLogsStore } from "../store/logs";
 import { useInspectStore } from "../store/inspect";
-
-const selectContainerStats = (state) => {
-  const containers = state.containers;
-  return {
-    running: containers.filter((c) => c.state === "running").length,
-  };
-};
 
 export default function Containers() {
   const { serverId } = useParams();

@@ -1,7 +1,5 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
 import Home from "./pages/Home";
-import Sidebar from "./components/Sidebar";
 import Images from "./pages/Images";
 import Containers from "./pages/Containers";
 import Settings from "./pages/Settings";

@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from "react";
 import AgentInstallation from "./AgentInstallation";
-import { useParams } from "react-router-dom";
-import { Wifi, WifiOff } from "lucide-react";
+import { WifiOff } from "lucide-react";
 import { useSystemStore } from "../store/system";
 
 export default function NodConnectionError() {
