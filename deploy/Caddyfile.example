@@ -1,0 +1,18 @@
+# Example Caddy reverse proxy for a production deploy.
+# Caddy handles TLS certificate issuance/renewal automatically (Let's Encrypt).
+#
+# Usage: copy to /etc/caddy/Caddyfile on your edge host, fill in your real
+# domains, and point DNS A/AAAA records at this host. Then: `caddy run` or
+# `systemctl restart caddy`.
+
+api.yourdomain.com {
+	# Express server — REST API + WebSocket hub (both on the same port)
+	reverse_proxy localhost:3001
+}
+
+app.yourdomain.com {
+	# Static client build served by nginx inside its own container,
+	# or swap this for `root * /path/to/dist` + `file_server` if you'd
+	# rather have Caddy serve the built files directly instead of nginx.
+	reverse_proxy localhost:8080
+}

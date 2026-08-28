@@ -1,0 +1,25 @@
+name: Agent CI
+
+on:
+  push:
+    paths:
+      - 'agent/**'
+  pull_request:
+    paths:
+      - 'agent/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: agent/package-lock.json
+      - run: npm ci
+      - run: node --check src/index.js

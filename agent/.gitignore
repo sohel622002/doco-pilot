@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+
+# Environment variables (Sensitive Data)
+.env
+.env.local
+.env.*.local
+
+# Local agent credentials (use config.json.example as the template)
+config.json
+

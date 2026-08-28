@@ -1,0 +1,36 @@
+services:
+  server:
+    build: ./server
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./server/.env
+    restart: unless-stopped
+
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_BACKEND_API_URL: http://localhost:3001
+        VITE_BACKEND_WS: ws://localhost:3001/ws
+    ports:
+      - "5173:80"
+    depends_on:
+      - server
+    restart: unless-stopped
+
+  # Optional: run the agent locally against this machine's own Docker socket,
+  # useful for testing without a second remote server. Fill in AGENT_KEY/
+  # AGENT_SECRET from a server you registered via the client first, then
+  # uncomment.
+  # agent:
+  #   build: ./agent
+  #   environment:
+  #     AGENT_KEY: ""
+  #     AGENT_SECRET: ""
+  #     BACKEND_WS_URL: "ws://server:3001/ws"
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   depends_on:
+  #     - server
+  #   restart: unless-stopped

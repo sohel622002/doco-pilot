@@ -1,0 +1,364 @@
+openapi: 3.0.3
+info:
+  title: doco-pilot API
+  description: >
+    REST API for the doco-pilot Docker fleet-management platform.
+    Container/image operations happen over the separate /ws WebSocket
+    endpoint (not documented here — see ws/index.js for the message
+    protocol) and are not part of this REST surface.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3001
+    description: Local development
+
+tags:
+  - name: Auth
+  - name: Servers
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        email_verified:
+          type: boolean
+    Server:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        ip:
+          type: string
+        agent_connected:
+          type: boolean
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        alert_webhook_url:
+          type: string
+          nullable: true
+        alert_cpu_threshold:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Create an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+      responses:
+        '201':
+          description: Account created; sets auth cookies
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+        '400': { description: Validation error, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: Email already registered }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200': { description: Sets auth cookies }
+        '401': { description: Invalid credentials }
+
+  /api/auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate the access token using the refresh token cookie
+      responses:
+        '200': { description: New auth cookies issued }
+        '401': { description: Invalid or expired refresh token }
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Log out and revoke the current refresh token
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200': { description: Logged out }
+
+  /api/auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request a password reset link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, format: email }
+      responses:
+        '200':
+          description: >
+            Always 200 regardless of whether the email is registered
+            (prevents account enumeration).
+
+  /api/auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password using a token from the forgot-password email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, password]
+              properties:
+                token: { type: string }
+                password: { type: string, minLength: 8 }
+      responses:
+        '200': { description: Password reset; all sessions invalidated }
+        '400': { description: Invalid or expired token }
+
+  /api/auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Confirm email address using the token from the verification email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '200': { description: Email verified }
+        '400': { description: Invalid or expired token }
+
+  /api/auth/resend-verification:
+    post:
+      tags: [Auth]
+      summary: Resend the verification email
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200': { description: Sent (or already verified) }
+
+  /api/auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change password while authenticated
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 8 }
+      responses:
+        '200': { description: Password updated; all sessions (including current) invalidated }
+        '401': { description: Current password incorrect }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Get the current user
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200':
+          description: Current user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/User' }
+        '401': { description: Unauthorized }
+
+  /api/servers:
+    get:
+      tags: [Servers]
+      summary: List servers owned by the current user
+      security: [{ cookieAuth: [] }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  servers:
+                    type: array
+                    items: { $ref: '#/components/schemas/Server' }
+    post:
+      tags: [Servers]
+      summary: Register a new server and generate agent credentials
+      security: [{ cookieAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, ip]
+              properties:
+                name: { type: string }
+                ip: { type: string, description: 'IPv4 address or hostname' }
+      responses:
+        '201':
+          description: Server created. Response includes the plaintext agentKey/agentSecret ONCE — store the docker run command shown to the user; it cannot be retrieved again except via /credentials.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server: { $ref: '#/components/schemas/Server' }
+                  agentKey: { type: string }
+                  agentSecret: { type: string }
+                  dockerCommand: { type: string }
+
+  /api/servers/{id}:
+    get:
+      tags: [Servers]
+      summary: Get a server (no credentials)
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server: { $ref: '#/components/schemas/Server' }
+        '404': { description: Not found or not owned by the current user }
+    patch:
+      tags: [Servers]
+      summary: Rename a server / update its IP
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                ip: { type: string }
+                alertWebhookUrl: { type: string, description: 'Empty string clears the webhook' }
+                alertCpuThreshold: { type: integer, minimum: 50, maximum: 99 }
+      responses:
+        '200': { description: Updated }
+        '404': { description: Not found }
+    delete:
+      tags: [Servers]
+      summary: Delete a server and revoke its agent credentials
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: Deleted }
+        '404': { description: Not found }
+
+  /api/servers/{id}/credentials:
+    get:
+      tags: [Servers]
+      summary: Decrypt and re-display the agent install command for this server
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  server: { type: object }
+                  agentKey: { type: string }
+                  agentSecret: { type: string }
+                  dockerCommand: { type: string }
+        '404': { description: Not found or credentials never generated }
+
+  /api/servers/{id}/regenerate-key:
+    post:
+      tags: [Servers]
+      summary: Issue new agent credentials for this server, invalidating the old ones
+      security: [{ cookieAuth: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200':
+          description: New credentials issued; existing agent connection using the old key will be rejected on its next handshake
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  agentKey: { type: string }
+                  agentSecret: { type: string }
+                  dockerCommand: { type: string }
+        '404': { description: Not found }
