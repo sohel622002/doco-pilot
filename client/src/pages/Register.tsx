@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../lib/axios";
+import { startGoogleAuth } from "../lib/googleAuth";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -26,21 +27,21 @@ export default function Register() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center p-md">
-        <div className="w-full max-w-110 bg-surface-container-lowest border border-outline-variant rounded-xl p-lg">
-          <div className="mb-md">
+      <div className="flex-1 flex flex-col items-center justify-center p-space-md">
+        <div className="w-full max-w-110 bg-surface-container-lowest border border-outline-variant rounded-xl p-space-lg">
+          <div className="mb-space-md">
             <h1 className="text-h1 mb-base">Create your account</h1>
             <p className="text-body-main text-on-surface-variant">
               Start managing your containers with ease.
             </p>
           </div>
-          <form className="space-y-md" onSubmit={onSubmit}>
+          <form className="space-y-space-md" onSubmit={onSubmit}>
             <div>
-              <label className="block text-label-caps text-on-surface-variant mb-xs uppercase">
+              <label className="block text-label-caps text-on-surface-variant mb-space-xs uppercase">
                 Full Name
               </label>
               <input
-                className="w-full h-11 px-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline"
+                className="w-full h-11 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline"
                 placeholder="Enter your full name"
                 type="text"
                 required
@@ -49,11 +50,11 @@ export default function Register() {
               />
             </div>
             <div>
-              <label className="block text-label-caps text-on-surface-variant mb-xs uppercase">
+              <label className="block text-label-caps text-on-surface-variant mb-space-xs uppercase">
                 Email Address
               </label>
               <input
-                className="w-full h-11 px-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline"
+                className="w-full h-11 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline"
                 placeholder="name@company.com"
                 type="email"
                 required
@@ -62,12 +63,12 @@ export default function Register() {
               />
             </div>
             <div>
-              <label className="block text-label-caps text-on-surface-variant mb-xs uppercase">
+              <label className="block text-label-caps text-on-surface-variant mb-space-xs uppercase">
                 Password
               </label>
               <div className="relative">
                 <input
-                  className="w-full h-11 px-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline"
+                  className="w-full h-11 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-outline"
                   placeholder="Create a password"
                   type="password"
                   required
@@ -78,9 +79,9 @@ export default function Register() {
               </div>
             </div>
             {error && <p className="text-error text-body-main">{error}</p>}
-            <div className="pt-xs">
+            <div className="pt-space-xs">
               <button
-                className="cursor-pointer w-full h-11 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-container transition-colors flex items-center justify-center gap-xs disabled:opacity-50"
+                className="cursor-pointer w-full h-11 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-container transition-colors flex items-center justify-center gap-space-xs disabled:opacity-50"
                 type="submit"
                 disabled={loading}
               >
@@ -88,15 +89,15 @@ export default function Register() {
               </button>
             </div>
           </form>
-          <div className="mt-md pt-md border-t border-outline-variant flex flex-col gap-sm">
+          <div className="mt-space-md pt-space-md border-t border-outline-variant flex flex-col gap-space-sm">
             <button
-              className="cursor-pointer w-full h-11 flex items-center justify-center gap-xs border border-outline-variant rounded-lg text-body-main hover:bg-surface-container transition-colors"
+              className="cursor-pointer w-full h-11 flex items-center justify-center gap-space-xs border border-outline-variant rounded-lg text-body-main hover:bg-surface-container transition-colors"
               type="button"
+              onClick={startGoogleAuth}
             >
               <img
                 alt="Google Logo"
                 className="w-4 h-4"
-                data-alt="A clean, vector-style Google G logo icon centered on a white circular background. The icon uses the standard Google brand colors of blue, red, yellow, and green. The visual style is minimalist and high-resolution, suitable for a professional modern UI sign-up interface."
                 src="https://cdn-icons-png.flaticon.com/128/281/281764.png"
               />
               Continue with Google
@@ -109,7 +110,7 @@ export default function Register() {
             </p>
           </div>
         </div>
-        <div className="mt-lg flex gap-md">
+        <div className="mt-space-lg flex gap-space-md">
           <a
             className="text-label-caps text-outline hover:text-on-surface-variant"
             href="#"
@@ -130,7 +131,7 @@ export default function Register() {
           </a>
         </div>
       </div>
-      <footer className="p-md text-center">
+      <footer className="p-space-md text-center">
         <p className="text-label-caps text-outline">
           © 2024 DockerDesk Inc. All rights reserved.
         </p>

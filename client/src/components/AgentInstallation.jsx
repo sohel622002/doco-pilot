@@ -5,14 +5,14 @@ export default function AgentInstallation() {
   const serverData = useSystemStore((state) => state.serverData);
 
   return (
-    <div className="p-md bg-surface border border-outline-variant rounded-lg flex flex-col space-y-md">
+    <div className="p-space-md bg-surface border border-outline-variant rounded-lg flex flex-col space-y-space-md">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-surface-container-high rounded-lg">
           <SquareTerminalIcon className="text-primary" />
         </div>
         <h3 className="font-h2 text-h2">Agent Installation</h3>
       </div>
-      <div className="space-y-sm">
+      <div className="space-y-space-sm">
         <p className="text-body-main text-on-surface-variant">
           To link a new server to this management console, run the following
           Docker command on your target host. The agent will automatically
@@ -30,7 +30,7 @@ export default function AgentInstallation() {
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-md pt-sm">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md pt-space-sm">
           <div className="flex gap-3">
             <span
               className="material-symbols-outlined text-primary-fixed-dim"

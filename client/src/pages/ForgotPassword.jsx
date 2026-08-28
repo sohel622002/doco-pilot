@@ -23,7 +23,7 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-md min-h-screen">
+    <div className="flex-1 flex flex-col items-center justify-center p-space-md min-h-screen">
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm max-w-md w-full">
         <div className="mb-8">
           <h2 className="text-h2 text-on-surface mb-2">Reset your password</h2>

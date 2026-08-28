@@ -1,0 +1,25 @@
+# Agent only — talks to a locally running server on the host.
+# Run server + client locally in separate terminals; start this with:
+#   npm run dev:agent
+#
+# Prerequisites:
+#   1. Fill agent/.env with AGENT_KEY and AGENT_SECRET from a registered server
+#   2. Start Docker Desktop
+#   3. Server already listening on host port 3001
+#
+# The agent reaches the host server via host.docker.internal and manages
+# the host Docker daemon through the mounted docker.sock.
+
+services:
+  agent:
+    build: ./agent
+    env_file:
+      - ./agent/.env
+    environment:
+      # Override LAN/IP from .env so the container can reach host-local server
+      BACKEND_WS_URL: ws://host.docker.internal:3001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

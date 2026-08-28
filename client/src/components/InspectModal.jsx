@@ -4,7 +4,7 @@ import Spinner from "./Spinner";
 
 function Row({ label, value }) {
   return (
-    <div className="py-xs border-b border-outline-variant/30 last:border-b-0">
+    <div className="py-space-xs border-b border-outline-variant/30 last:border-b-0">
       <p className="text-label-caps text-on-surface-variant uppercase tracking-wider mb-1">
         {label}
       </p>
@@ -24,9 +24,9 @@ export default function InspectModal() {
   if (!containerId) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-space-md">
       <div className="w-full max-w-2xl max-h-[80vh] bg-surface border border-outline-variant rounded-xl flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-md py-sm border-b border-outline-variant">
+        <div className="flex items-center justify-between px-space-md py-space-sm border-b border-outline-variant">
           <h3 className="font-h2 text-h2 text-on-surface">
             Inspect — {containerId}
           </h3>
@@ -37,9 +37,9 @@ export default function InspectModal() {
             <X size={18} />
           </button>
         </div>
-        <div className="flex-1 overflow-auto p-md">
+        <div className="flex-1 overflow-auto p-space-md">
           {loading ? (
-            <div className="flex justify-center py-lg">
+            <div className="flex justify-center py-space-lg">
               <Spinner />
             </div>
           ) : !data ? (

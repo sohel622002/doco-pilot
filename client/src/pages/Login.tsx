@@ -1,9 +1,10 @@
 /// <reference types="vite/client" />
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
+import { googleAuthErrorMessage, startGoogleAuth } from "../lib/googleAuth";
 
 const loginSchema = z.object({
   email: z.email("Invalid email address"),
@@ -16,6 +17,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const oauthError = googleAuthErrorMessage(searchParams.get("error"));
+    if (oauthError) setError(oauthError);
+  }, [searchParams]);
 
   const {
     register,
@@ -27,6 +34,7 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     setLoading(true);
+    setError("");
 
     try {
       const res = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/auth/login`, {
@@ -43,13 +51,12 @@ export default function Login() {
       }
 
       const userData = await res.json();
-      // success
-      console.log("Logged in", userData);
       localStorage.setItem("user", JSON.stringify(userData?.user || {}));
 
       navigate("/");
     } catch (err) {
       console.error(err);
+      setError("Login failed");
     } finally {
       setLoading(false);
     }
@@ -57,7 +64,7 @@ export default function Login() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center p-md">
+      <div className="flex-1 flex flex-col items-center justify-center p-space-md">
         <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm">
           <div className="mb-8">
             <h2 className="text-h2 text-on-surface mb-2">Welcome back</h2>
@@ -66,7 +73,6 @@ export default function Login() {
             </p>
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
-            {/* <!-- Email Input --> */}
             <div className="flex flex-col gap-2">
               <label
                 className="text-label-caps text-on-surface-variant uppercase"
@@ -81,8 +87,10 @@ export default function Login() {
                 type="email"
                 {...register("email")}
               />
+              {errors.email && (
+                <p className="text-error text-body-main">{errors.email.message}</p>
+              )}
             </div>
-            {/* <!-- Password Input --> */}
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <label
@@ -114,18 +122,19 @@ export default function Login() {
                   <span className="material-symbols-outlined">visibility</span>
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-error text-body-main">{errors.password.message}</p>
+              )}
             </div>
             {error && <p className="text-error text-body-main">{error}</p>}
-            {/* <!-- Login Button --> */}
             <button
               disabled={loading}
               className="w-full h-11 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-container transition-colors shadow-sm mt-2"
               type="submit"
             >
-              {loading ? 'Signing in...': 'Sign in'}
+              {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
-          {/* <!-- Footer Links --> */}
           <div className="mt-6 flex flex-col items-center gap-4">
             <div className="flex items-center gap-4 w-full">
               <div className="h-px bg-outline-variant flex-1"></div>
@@ -134,32 +143,24 @@ export default function Login() {
               </span>
               <div className="h-px bg-outline-variant flex-1"></div>
             </div>
-            <div className="grid grid-cols-2 gap-3 w-full pb-6 border-b border-outline-variant">
-              <button className="flex items-center justify-center gap-2 h-10 border border-outline-variant rounded-lg bg-surface hover:bg-surface-container transition-colors">
+            <div className="w-full pb-6 border-b border-outline-variant">
+              <button
+                type="button"
+                onClick={startGoogleAuth}
+                className="flex items-center justify-center gap-2 w-full h-10 border border-outline-variant rounded-lg bg-surface hover:bg-surface-container transition-colors"
+              >
                 <img
                   alt="Google"
                   className="w-4 h-4"
-                  data-alt="A clean, isolated Google 'G' logo vector in its official four-color scheme of red, yellow, green, and blue. The logo is centered on a transparent background, perfect for a modern light-mode UI design. The visual style is crisp, professional, and minimalist to match a developer-focused workspace aesthetic."
                   src="https://cdn-icons-png.flaticon.com/128/281/281764.png"
                 />
                 <span className="text-body-main text-on-surface font-medium">
-                  Google
-                </span>
-              </button>
-              <button className="flex items-center justify-center gap-2 h-10 border border-outline-variant rounded-lg bg-surface hover:bg-surface-container transition-colors">
-                <img
-                  alt="Google"
-                  className="w-4 h-4"
-                  data-alt="A clean, isolated Google 'G' logo vector in its official four-color scheme of red, yellow, green, and blue. The logo is centered on a transparent background, perfect for a modern light-mode UI design. The visual style is crisp, professional, and minimalist to match a developer-focused workspace aesthetic."
-                  src="https://cdn-icons-png.flaticon.com/128/733/733609.png"
-                />
-                <span className="text-body-main text-on-surface font-medium">
-                  GitHub
+                  Continue with Google
                 </span>
               </button>
             </div>
             <p className="text-body-main text-on-surface-variant">
-              Don't have an account?
+              Don't have an account?{" "}
               <Link
                 to={"/register"}
                 className="text-primary font-medium hover:underline"
@@ -169,7 +170,7 @@ export default function Login() {
             </p>
           </div>
         </div>
-        <div className="mt-lg flex gap-md">
+        <div className="mt-space-lg flex gap-space-md">
           <a
             className="text-label-caps text-outline hover:text-on-surface-variant"
             href="#"
@@ -190,7 +191,7 @@ export default function Login() {
           </a>
         </div>
       </div>
-      <footer className="p-md text-center">
+      <footer className="p-space-md text-center">
         <p className="text-label-caps text-outline">
           © 2024 DockerDesk Inc. All rights reserved.
         </p>

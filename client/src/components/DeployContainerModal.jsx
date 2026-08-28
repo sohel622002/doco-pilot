@@ -48,9 +48,9 @@ export default function DeployContainerModal({ serverId, open, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-space-md">
       <div className="w-full max-w-lg bg-surface border border-outline-variant rounded-xl flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between px-md py-sm border-b border-outline-variant">
+        <div className="flex items-center justify-between px-space-md py-space-sm border-b border-outline-variant">
           <h3 className="font-h2 text-h2 text-on-surface">Deploy Container</h3>
           <button
             className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"
@@ -59,65 +59,65 @@ export default function DeployContainerModal({ serverId, open, onClose }) {
             <X size={18} />
           </button>
         </div>
-        <form onSubmit={onSubmit} className="p-md space-y-sm">
-          <div className="space-y-xs">
+        <form onSubmit={onSubmit} className="p-space-md space-y-space-sm">
+          <div className="space-y-space-xs">
             <label className="text-label-caps text-on-surface-variant uppercase">
               Image
             </label>
             <input
               required
-              className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
+              className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
               placeholder="nginx:latest"
               value={image}
               onChange={(e) => setImage(e.target.value)}
             />
           </div>
-          <div className="space-y-xs">
+          <div className="space-y-space-xs">
             <label className="text-label-caps text-on-surface-variant uppercase">
               Name (optional)
             </label>
             <input
-              className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
+              className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
               placeholder="my-nginx"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="space-y-xs">
+          <div className="space-y-space-xs">
             <label className="text-label-caps text-on-surface-variant uppercase">
               Port Mappings (comma-separated, hostPort:containerPort)
             </label>
             <input
-              className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
+              className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
               placeholder="8080:80, 8443:443"
               value={ports}
               onChange={(e) => setPorts(e.target.value)}
             />
           </div>
-          <div className="space-y-xs">
+          <div className="space-y-space-xs">
             <label className="text-label-caps text-on-surface-variant uppercase">
               Environment Variables (one KEY=VALUE per line)
             </label>
             <textarea
               rows={3}
-              className="w-full px-sm py-xs bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
+              className="w-full px-space-sm py-space-xs bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
               placeholder={"NODE_ENV=production\nPORT=3000"}
               value={env}
               onChange={(e) => setEnv(e.target.value)}
             />
           </div>
           {error && <p className="text-error text-body-main">{error}</p>}
-          <div className="flex justify-end gap-sm pt-xs">
+          <div className="flex justify-end gap-space-sm pt-space-xs">
             <button
               type="button"
               onClick={onClose}
-              className="px-md py-xs rounded border border-outline-variant text-on-surface font-body-main hover:bg-surface-container-high transition-colors"
+              className="px-space-md py-space-xs rounded border border-outline-variant text-on-surface font-body-main hover:bg-surface-container-high transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-md py-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity"
+              className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity"
             >
               Deploy
             </button>

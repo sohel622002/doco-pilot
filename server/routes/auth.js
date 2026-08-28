@@ -18,8 +18,35 @@ import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema,
 import { auditLog } from "../utils/audit.js";
 import { logger } from "../utils/logger.js";
 import { sendMail, verificationEmail, passwordResetEmail } from "../utils/mail.js";
+import {
+  isGoogleAuthConfigured,
+  buildGoogleAuthUrl,
+  exchangeGoogleCode,
+  fetchGoogleUser,
+} from "../utils/googleAuth.js";
 
 const router = Router();
+
+async function issueSession(res, user, ip) {
+  const payload = { id: user.id, email: user.email };
+  const accessToken = signAccessToken(payload, ip);
+  const refreshToken = signRefreshToken();
+  const refreshTokenHash = await hashToken(refreshToken);
+
+  await supabase.from("refresh_tokens").insert({
+    user_id: user.id,
+    token_hash: refreshTokenHash,
+    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  });
+
+  setAuthCookies(res, accessToken, refreshToken);
+  return payload;
+}
+
+function frontendRedirect(path = "/") {
+  const base = (process.env.FRONTEND_URL || "http://localhost:5173").replace(/\/$/, "");
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+}
 
 // ── POST /api/auth/register ──────────────────────────────────
 router.post('/register', authLimiter, validateBody(registerSchema), async (req, res) => {
@@ -113,6 +140,12 @@ router.post("/login", authLimiter, validateBody(loginSchema), async (req, res) =
     return res.status(401).json({ error: "Invalid email or password" });
   }
 
+  if (!user.password_hash) {
+    return res.status(401).json({
+      error: "This account uses Google sign-in. Continue with Google.",
+    });
+  }
+
   // 🔥 Compare password
   const isValid = await comparePassword(password, user.password_hash);
 
@@ -120,21 +153,115 @@ router.post("/login", authLimiter, validateBody(loginSchema), async (req, res) =
     return res.status(401).json({ error: "Invalid email or password" });
   }
 
-  const payload = { id: user.id, email: user.email };
+  const payload = await issueSession(res, user, req.ip);
+  res.json({ user: payload });
+});
 
-  const accessToken = signAccessToken(payload, req.ip);
-  const refreshToken = signRefreshToken();
-  const refreshTokenHash = await hashToken(refreshToken);
+// ── GET /api/auth/google ─────────────────────────────────────
+router.get("/google", authLimiter, (req, res) => {
+  if (!isGoogleAuthConfigured()) {
+    return res.redirect(frontendRedirect("/login?error=google_not_configured"));
+  }
 
-  await supabase.from("refresh_tokens").insert({
-    user_id: user.id,
-    token_hash: refreshTokenHash,
-    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  const state = randomBytes(16).toString("hex");
+  const isProd = process.env.NODE_ENV === "production";
+
+  res.cookie("oauth_state", state, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    maxAge: 10 * 60 * 1000,
   });
 
-  setAuthCookies(res, accessToken, refreshToken);
+  res.redirect(buildGoogleAuthUrl(state));
+});
 
-  res.json({ user: payload });
+// ── GET /api/auth/google/callback ────────────────────────────
+router.get("/google/callback", authLimiter, async (req, res) => {
+  const fail = (reason = "google_auth_failed") =>
+    res.redirect(frontendRedirect(`/login?error=${encodeURIComponent(reason)}`));
+
+  try {
+    if (!isGoogleAuthConfigured()) return fail("google_not_configured");
+
+    const { code, state, error: oauthError } = req.query;
+    const savedState = req.cookies?.oauth_state;
+    res.clearCookie("oauth_state");
+
+    if (oauthError || !code || !state || !savedState || state !== savedState) {
+      return fail("google_auth_failed");
+    }
+
+    const tokens = await exchangeGoogleCode(String(code));
+    if (!tokens.access_token) return fail("google_auth_failed");
+
+    const googleUser = await fetchGoogleUser(tokens.access_token);
+
+    // Prefer existing Google-linked account
+    let { data: user } = await supabase
+      .from("profiles")
+      .select("id, email, name, google_id")
+      .eq("google_id", googleUser.googleId)
+      .maybeSingle();
+
+    if (!user) {
+      // Link or create by email
+      const { data: byEmail } = await supabase
+        .from("profiles")
+        .select("id, email, name, google_id, email_verified")
+        .eq("email", googleUser.email)
+        .maybeSingle();
+
+      if (byEmail) {
+        const { data: linked, error: linkError } = await supabase
+          .from("profiles")
+          .update({
+            google_id: googleUser.googleId,
+            email_verified: googleUser.emailVerified || byEmail.email_verified,
+            ...(byEmail.name ? {} : { name: googleUser.name }),
+          })
+          .eq("id", byEmail.id)
+          .select("id, email, name, google_id")
+          .single();
+
+        if (linkError || !linked) {
+          logger.error({ err: linkError }, "Google auth: failed to link account");
+          return fail("google_auth_failed");
+        }
+        user = linked;
+      } else {
+        const { data: created, error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            name: googleUser.name,
+            email: googleUser.email,
+            google_id: googleUser.googleId,
+            password_hash: null,
+            email_verified: googleUser.emailVerified,
+          })
+          .select("id, email, name, google_id")
+          .single();
+
+        if (createError || !created) {
+          logger.error({ err: createError }, "Google auth: failed to create account");
+          return fail("google_auth_failed");
+        }
+        user = created;
+      }
+    }
+
+    await issueSession(res, user, req.ip);
+    auditLog({
+      req: { user: { id: user.id, email: user.email }, ip: req.ip },
+      action: "auth:google",
+      target: user.id,
+    });
+
+    res.redirect(frontendRedirect("/"));
+  } catch (err) {
+    logger.error({ err }, "Google auth callback failed");
+    return fail("google_auth_failed");
+  }
 });
 
 // ── POST /api/auth/refresh ───────────────────────────────────
@@ -315,6 +442,12 @@ router.post("/change-password", requireAuth, validateBody(changePasswordSchema),
 
   if (error || !user) {
     return res.status(404).json({ error: "User not found" });
+  }
+
+  if (!user.password_hash) {
+    return res.status(400).json({
+      error: "This account uses Google sign-in and has no password to change",
+    });
   }
 
   const isValid = await comparePassword(currentPassword, user.password_hash);

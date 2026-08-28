@@ -8,8 +8,8 @@ export default function NodConnectionError() {
   return (
     <>
       {/* <!-- Error Status Indicator --> */}
-      <div className="flex flex-col items-center text-center mb-md">
-        <div className="w-16 h-16 rounded-full bg-error-container flex items-center justify-center mb-md">
+      <div className="flex flex-col items-center text-center mb-space-md">
+        <div className="w-16 h-16 rounded-full bg-error-container flex items-center justify-center mb-space-md">
           <span
             className="material-symbols-outlined text-error text-[32px]"
             data-icon="error_outline"
@@ -17,7 +17,7 @@ export default function NodConnectionError() {
             error_outline
           </span>
         </div>
-        <h2 className="font-h1 text-h1 text-on-surface mb-xs">Node Offline</h2>
+        <h2 className="font-h1 text-h1 text-on-surface mb-space-xs">Node Offline</h2>
         <p className="font-body-large text-on-surface-variant max-w-2xl">
           <span className="font-bold">"{serverData?.server?.name}"</span>{" "}
           is currently unreachable. The management console has lost connection
@@ -25,9 +25,9 @@ export default function NodConnectionError() {
         </p>
       </div>
       {/* <!-- Centered Error Card --> */}
-      <div className="w-full mx-auto max-w-2xl bg-surface-container-lowest border border-error rounded-xl p-md">
-        <div className="flex items-center justify-between border-b border-outline-variant pb-md mb-md">
-          <div className="flex items-center gap-sm">
+      <div className="w-full mx-auto max-w-2xl bg-surface-container-lowest border border-error rounded-xl p-space-md">
+        <div className="flex items-center justify-between border-b border-outline-variant pb-space-md mb-space-md">
+          <div className="flex items-center gap-space-sm">
             <WifiOff className="text-error text-xl" />
             <div>
               <p className="font-label-caps text-on-surface-variant uppercase">
@@ -45,9 +45,9 @@ export default function NodConnectionError() {
             <p className="font-body-main text-on-surface">5 minutes ago</p>
           </div>
         </div>
-        <div className="space-y-md">
-          <div className="bg-surface-container-low p-md rounded-lg">
-            <h3 className="font-h2 text-h2 text-on-surface mb-sm flex items-center gap-xs">
+        <div className="space-y-space-md">
+          <div className="bg-surface-container-low p-space-md rounded-lg">
+            <h3 className="font-h2 text-h2 text-on-surface mb-space-sm flex items-center gap-space-xs">
               <span
                 className="material-symbols-outlined text-sm"
                 data-icon="build"
@@ -56,13 +56,13 @@ export default function NodConnectionError() {
               </span>
               Troubleshooting Steps
             </h3>
-            <ul className="space-y-sm">
-              <li className="flex items-start gap-sm font-body-main text-on-surface-variant">
+            <ul className="space-y-space-sm">
+              <li className="flex items-start gap-space-sm font-body-main text-on-surface-variant">
                 <span className="font-bold text-primary">1.</span>
                 Check server power and physical network connectivity to the data
                 center or cloud provider.
               </li>
-              <li className="flex items-start gap-sm font-body-main text-on-surface-variant">
+              <li className="flex items-start gap-space-sm font-body-main text-on-surface-variant">
                 <span className="font-bold text-primary">2.</span>
                 <span>
                   SSH into the node and ensure the
@@ -72,7 +72,7 @@ export default function NodConnectionError() {
                   service is active and running.
                 </span>
               </li>
-              <li className="flex items-start gap-sm font-body-main text-on-surface-variant">
+              <li className="flex items-start gap-space-sm font-body-main text-on-surface-variant">
                 <span className="font-bold text-primary">3.</span>
                 <span>
                   Verify API firewall rules and security groups permit traffic
@@ -85,14 +85,14 @@ export default function NodConnectionError() {
               </li>
             </ul>
           </div>
-          <div className="flex items-center justify-center gap-md pt-xs">
-            <button className="bg-primary text-on-primary px-md py-sm rounded-lg font-body-main font-semibold hover:opacity-90 transition-all active:scale-95 flex items-center gap-xs">
+          <div className="flex items-center justify-center gap-space-md pt-space-xs">
+            <button className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-body-main font-semibold hover:opacity-90 transition-all active:scale-95 flex items-center gap-space-xs">
               <span className="material-symbols-outlined" data-icon="refresh">
                 refresh
               </span>
               Retry Connection
             </button>
-            <button className="bg-surface-container-lowest border border-outline-variant text-on-surface-variant px-md py-sm rounded-lg font-body-main hover:bg-surface-container transition-all active:scale-95 flex items-center gap-xs">
+            <button className="bg-surface-container-lowest border border-outline-variant text-on-surface-variant px-space-md py-space-sm rounded-lg font-body-main hover:bg-surface-container transition-all active:scale-95 flex items-center gap-space-xs">
               <span
                 className="material-symbols-outlined"
                 data-icon="receipt_long"

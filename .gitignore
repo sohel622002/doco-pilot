@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
 # Build output
 dist/
@@ -11,6 +12,9 @@ build/
 .env.local
 .env.*.local
 !.env.example
+
+# Internal planning docs (not part of the public repo)
+PRD.md
 
 # Agent local credentials
 agent/config.json

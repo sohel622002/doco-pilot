@@ -36,7 +36,7 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-md min-h-screen">
+      <div className="flex-1 flex flex-col items-center justify-center p-space-md min-h-screen">
         <p className="text-error text-body-main">
           Missing reset token. Please use the link from your email, or{" "}
           <Link to="/forgot-password" className="text-primary hover:underline">
@@ -49,7 +49,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-md min-h-screen">
+    <div className="flex-1 flex flex-col items-center justify-center p-space-md min-h-screen">
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm max-w-md w-full">
         <div className="mb-8">
           <h2 className="text-h2 text-on-surface mb-2">Set a new password</h2>

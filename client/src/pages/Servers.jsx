@@ -30,23 +30,23 @@ function AddServerForm({ onCreated }) {
   return (
     <form
       onSubmit={onSubmit}
-      className="bg-surface-container-lowest border border-outline-variant rounded-xl p-md flex flex-col md:flex-row gap-sm md:items-end mb-md"
+      className="bg-surface-container-lowest border border-outline-variant rounded-xl p-space-md flex flex-col md:flex-row gap-space-sm md:items-end mb-space-md"
     >
-      <div className="flex-1 space-y-xs">
+      <div className="flex-1 space-y-space-xs">
         <label className="text-label-caps text-on-surface-variant uppercase">Name</label>
         <input
           required
-          className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main outline-none focus:ring-1 focus:ring-primary"
+          className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main outline-none focus:ring-1 focus:ring-primary"
           placeholder="prod-01"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
       </div>
-      <div className="flex-1 space-y-xs">
+      <div className="flex-1 space-y-space-xs">
         <label className="text-label-caps text-on-surface-variant uppercase">IP / Hostname</label>
         <input
           required
-          className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main outline-none focus:ring-1 focus:ring-primary"
+          className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg text-body-main outline-none focus:ring-1 focus:ring-primary"
           placeholder="203.0.113.10"
           value={ip}
           onChange={(e) => setIp(e.target.value)}
@@ -55,12 +55,12 @@ function AddServerForm({ onCreated }) {
       <button
         type="submit"
         disabled={loading}
-        className="h-10 px-md flex items-center gap-xs bg-primary text-on-primary rounded-lg font-body-main font-bold hover:opacity-90 disabled:opacity-50"
+        className="h-10 px-space-md flex items-center gap-space-xs bg-primary text-on-primary rounded-lg font-body-main font-bold hover:opacity-90 disabled:opacity-50"
       >
         <Plus size={16} />
         {loading ? "Creating…" : "Add Server"}
       </button>
-      {error && <p className="text-error text-body-main md:ml-sm">{error}</p>}
+      {error && <p className="text-error text-body-main md:ml-space-sm">{error}</p>}
     </form>
   );
 }
@@ -85,9 +85,9 @@ export default function Servers() {
   };
 
   return (
-    <div className="max-w-container-max mx-auto p-md">
-      <div className="mb-lg">
-        <h1 className="font-h1 text-h1 text-on-background mb-xs">Your Servers</h1>
+    <div className="max-w-container-max mx-auto p-space-md">
+      <div className="mb-space-lg">
+        <h1 className="font-h1 text-h1 text-on-background mb-space-xs">Your Servers</h1>
         <p className="text-body-large text-on-surface-variant">
           All servers registered to your account.
         </p>
@@ -96,8 +96,8 @@ export default function Servers() {
       <AddServerForm onCreated={handleCreated} />
 
       {newServer?.dockerCommand && (
-        <div className="mb-md p-md bg-inverse-surface text-inverse-on-surface rounded-lg font-code text-code overflow-x-auto border border-white/10 relative">
-          <p className="mb-xs opacity-70">
+        <div className="mb-space-md p-space-md bg-inverse-surface text-inverse-on-surface rounded-lg font-code text-code overflow-x-auto border border-white/10 relative">
+          <p className="mb-space-xs opacity-70">
             Server created — run this on the target host to connect its agent:
           </p>
           <pre>{newServer.dockerCommand}</pre>
@@ -117,15 +117,15 @@ export default function Servers() {
           No servers yet — add one above to get started.
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-md">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
           {servers.map((server) => (
             <div
               key={server.id}
-              className="bg-surface-container-low border border-outline-variant rounded-xl p-md flex flex-col gap-sm hover:border-primary transition-colors cursor-pointer"
+              className="bg-surface-container-low border border-outline-variant rounded-xl p-space-md flex flex-col gap-space-sm hover:border-primary transition-colors cursor-pointer"
               onClick={() => navigate(`/${server.id}`)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-sm">
+                <div className="flex items-center gap-space-sm">
                   <div className="h-8 w-8 rounded bg-primary-container/20 flex items-center justify-center text-primary">
                     <ServerIcon size={18} />
                   </div>
@@ -147,7 +147,7 @@ export default function Servers() {
                   <Trash2 size={16} />
                 </button>
               </div>
-              <div className="flex items-center gap-xs">
+              <div className="flex items-center gap-space-xs">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${
                     server.agent_connected ? "bg-primary" : "bg-outline"

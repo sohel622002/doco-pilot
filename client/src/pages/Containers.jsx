@@ -63,17 +63,17 @@ export default function Containers() {
   }, [serverId]);
 
   return (
-    <div className="max-w-container-max mx-auto p-md">
+    <div className="max-w-container-max mx-auto p-space-md">
       {/* <!-- Page Header & Filters --> */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-md mb-lg">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
         <div>
           <h2 className="font-h1 text-h1 text-on-surface">Containers</h2>
           <p className="text-on-surface-variant font-body-main">
             Manage your active container instances and clusters.
           </p>
         </div>
-        <div className="flex items-center gap-sm">
-          <div className="flex items-center gap-xs bg-surface-container-low border border-outline-variant px-sm py-xs rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+        <div className="flex items-center gap-space-sm">
+          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
             <span className="material-symbols-outlined text-sm">
               filter_list
             </span>
@@ -81,7 +81,7 @@ export default function Containers() {
               Status: All
             </span>
           </div>
-          <div className="flex items-center gap-xs bg-surface-container-low border border-outline-variant px-sm py-xs rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
             <span className="material-symbols-outlined text-sm">stacks</span>
             <span className="text-label-caps uppercase tracking-wider">
               Stack: All
@@ -89,7 +89,7 @@ export default function Containers() {
           </div>
           <button
             onClick={() => setDeployOpen(true)}
-            className="bg-primary text-on-primary px-md py-xs rounded-lg font-body-main font-bold hover:opacity-90 transition-opacity"
+            className="bg-primary text-on-primary px-space-md py-space-xs rounded-lg font-body-main font-bold hover:opacity-90 transition-opacity"
           >
             Deploy Container
           </button>
@@ -97,45 +97,45 @@ export default function Containers() {
       </div>
       {containers && containers.length > 0 && (
         <>
-          <div className="grid grid-cols-12 gap-md mb-lg">
-            <div className="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl py-md flex items-center justify-between">
+          <div className="grid grid-cols-12 gap-space-md mb-space-lg">
+            <div className="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl py-space-md flex items-center justify-between">
               <div className="flex w-full">
                 <div className="flex-1 text-center">
-                  <p className="text-label-caps text-on-surface-variant mb-xs">
+                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
                     RUNNING
                   </p>
-                  <p className="font-h1 text-h1 text-primary">
+                  <p className="font-h1 text-stat text-primary">
                     {runningContainers ?? 0}
                   </p>
                 </div>
                 <div className="flex-1 text-center border-l border-outline-variant">
-                  <p className="text-label-caps text-on-surface-variant mb-xs">
+                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
                     STOPPED
                   </p>
-                  <p className="font-h1 text-h1 text-secondary">{stoppedContainers ?? 0}</p>
+                  <p className="font-h1 text-stat text-secondary">{stoppedContainers ?? 0}</p>
                 </div>
                 <div className="flex-1 text-center border-l border-outline-variant">
-                  <p className="text-label-caps text-on-surface-variant mb-xs">
+                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
                     PAUSED
                   </p>
-                  <p className="font-h1 text-h1 text-on-surface">{pausedContainers ?? 0}</p>
+                  <p className="font-h1 text-stat text-on-surface">{pausedContainers ?? 0}</p>
                 </div>
                 <div className="flex-1 text-center border-l border-outline-variant">
-                  <p className="text-label-caps text-on-surface-variant mb-xs">
+                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
                     RESOURCE UTIL
                   </p>
-                  <p className="font-h1 text-h1 text-on-surface">75%</p>
+                  <p className="font-h1 text-stat text-on-surface">75%</p>
                 </div>
               </div>
             </div>
-            <div className="col-span-12 lg:col-span-4 bg-primary text-on-primary rounded-xl p-md relative overflow-hidden">
+            <div className="col-span-12 lg:col-span-4 bg-primary text-on-primary rounded-xl p-space-md relative overflow-hidden">
               <div className="relative z-10">
-                <h3 className="font-h2 text-h2 mb-xs">Docker Node Healthy</h3>
+                <h3 className="font-h2 text-h2 mb-space-xs">Docker Node Healthy</h3>
                 <p className="font-body-main opacity-80">
                   All 4 nodes are reporting stable heartbeat responses.
                 </p>
               </div>
-              <span className="material-symbols-outlined absolute -right-md -bottom-md text-8xl opacity-10 rotate-12">
+              <span className="material-symbols-outlined absolute -right-space-md -bottom-space-md text-8xl opacity-10 rotate-12">
                 check_circle
               </span>
             </div>
@@ -145,19 +145,19 @@ export default function Containers() {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-md py-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
                       Container Name
                     </th>
-                    <th className="px-md py-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
                       Image Source
                     </th>
-                    <th className="px-md py-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
                       Status
                     </th>
-                    <th className="px-md py-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
                       Port Mappings
                     </th>
-                    <th className="px-md py-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-right">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-right">
                       Quick Actions
                     </th>
                   </tr>
@@ -168,8 +168,8 @@ export default function Containers() {
                       className="hover:bg-surface-container-low transition-colors group"
                       key={container.id}
                     >
-                      <td className="px-md py-md">
-                        <div className="flex items-center gap-sm">
+                      <td className="px-space-md py-space-md">
+                        <div className="flex items-center gap-space-sm">
                           <div className="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center text-primary">
                             {container?.process ? <Spinner /> : <Box />}
                           </div>
@@ -183,16 +183,16 @@ export default function Containers() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-md py-md">
-                        <span className="font-code text-code text-on-surface-variant bg-surface-container px-xs py-1 rounded">
+                      <td className="px-space-md py-space-md">
+                        <span className="font-code text-code text-on-surface-variant bg-surface-container px-space-xs py-1 rounded">
                           {container?.image}
                         </span>
                       </td>
-                      <td className="px-md py-md">
+                      <td className="px-space-md py-space-md">
                         {container?.state === "running" && (
                           <span
                             title={container?.status}
-                            className="inline-flex items-center gap-xs px-xs py-1 rounded-full bg-primary-container/20 text-primary text-label-caps"
+                            className="inline-flex items-center gap-space-xs px-space-xs py-1 rounded-full bg-primary-container/20 text-primary text-label-caps"
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
                             Running
@@ -201,7 +201,7 @@ export default function Containers() {
                         {container?.state === "exited" && (
                           <span
                             title={container?.status}
-                            className="inline-flex items-center gap-xs px-xs py-1 rounded-full bg-secondary-container text-secondary text-label-caps"
+                            className="inline-flex items-center gap-space-xs px-space-xs py-1 rounded-full bg-secondary-container text-secondary text-label-caps"
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-outline"></span>
                             Stopped
@@ -210,14 +210,14 @@ export default function Containers() {
                         {container?.state === "paused" && (
                           <span
                             title={container?.status}
-                            className="inline-flex items-center gap-xs px-xs py-1 rounded-full border border-secondary-container text-secondary text-label-caps"
+                            className="inline-flex items-center gap-space-xs px-space-xs py-1 rounded-full border border-secondary-container text-secondary text-label-caps"
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-outline"></span>
                             Paused
                           </span>
                         )}
                       </td>
-                      <td className="px-md py-md">
+                      <td className="px-space-md py-space-md">
                         <span className="font-code text-code text-on-surface-variant">
                           {container?.ports.length > 0 ? (
                             <span>{container?.ports.join(", ")}</span>
@@ -226,8 +226,8 @@ export default function Containers() {
                           )}
                         </span>
                       </td>
-                      <td className="px-md py-md text-right">
-                        <div className="flex items-center justify-end gap-xs transition-opacity">
+                      <td className="px-space-md py-space-md text-right">
+                        <div className="flex items-center justify-end gap-space-xs transition-opacity">
                           <button
                             className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"
                             disabled={container?.process}
@@ -332,15 +332,15 @@ export default function Containers() {
                 </tbody>
               </table>
             </div>
-            <div className="p-md bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
+            <div className="p-space-md bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
               <p className="text-label-caps text-on-surface-variant">
                 Showing 4 of 34 containers
               </p>
-              <div className="flex items-center gap-sm">
-                <button className="px-sm py-xs border border-outline-variant rounded-lg text-label-caps hover:bg-surface-container-low transition-colors">
+              <div className="flex items-center gap-space-sm">
+                <button className="px-space-sm py-space-xs border border-outline-variant rounded-lg text-label-caps hover:bg-surface-container-low transition-colors">
                   Previous
                 </button>
-                <button className="px-sm py-xs border border-outline-variant rounded-lg text-label-caps hover:bg-surface-container-low transition-colors">
+                <button className="px-space-sm py-space-xs border border-outline-variant rounded-lg text-label-caps hover:bg-surface-container-low transition-colors">
                   Next
                 </button>
               </div>

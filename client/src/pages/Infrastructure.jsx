@@ -39,7 +39,7 @@ function AlertsCard({ serverId }) {
   };
 
   return (
-    <section className="lg:col-span-3 p-md bg-surface border border-outline-variant rounded-lg space-y-md">
+    <section className="lg:col-span-3 p-space-md bg-surface border border-outline-variant rounded-lg space-y-space-md">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-surface-container-high rounded-lg">
           <span className="material-symbols-outlined text-primary" data-icon="notifications">
@@ -55,24 +55,24 @@ function AlertsCard({ serverId }) {
           </p>
         </div>
       </div>
-      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-sm items-end">
-        <div className="md:col-span-2 space-y-xs">
+      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-space-sm items-end">
+        <div className="md:col-span-2 space-y-space-xs">
           <label className="font-body-main font-semibold block">Webhook URL</label>
           <input
             type="url"
             placeholder="https://hooks.slack.com/services/…"
-            className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
+            className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
             value={webhookUrl}
             onChange={(e) => setWebhookUrl(e.target.value)}
           />
         </div>
-        <div className="space-y-xs">
+        <div className="space-y-space-xs">
           <label className="font-body-main font-semibold block">CPU Alert Threshold (%)</label>
           <input
             type="number"
             min={50}
             max={99}
-            className="w-full h-10 px-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-main outline-none focus:ring-1 focus:ring-primary"
+            className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-main outline-none focus:ring-1 focus:ring-primary"
             value={cpuThreshold}
             onChange={(e) => setCpuThreshold(e.target.value)}
           />
@@ -85,7 +85,7 @@ function AlertsCard({ serverId }) {
           <button
             type="submit"
             disabled={loading}
-            className="px-md py-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? "Saving…" : "Save"}
           </button>
@@ -115,8 +115,8 @@ export default function Infrastructure() {
   };
 
   return (
-    <div className="max-w-container-max mx-auto p-md">
-      <div className="flex justify-between items-end pb-sm">
+    <div className="max-w-container-max mx-auto p-space-md">
+      <div className="flex justify-between items-end pb-space-sm">
         <div>
           <nav className="flex items-center gap-2 text-on-surface-variant font-label-caps mb-1">
             <span>Infrastructure</span>
@@ -132,7 +132,7 @@ export default function Infrastructure() {
             Server Configuration
           </h2>
         </div>
-        <div className="flex gap-sm">
+        <div className="flex gap-space-sm">
           <button className="flex items-center gap-2 px-4 py-2 thin-border rounded-lg bg-surface hover:bg-surface-container-low transition-colors font-body-main">
             <span
               className="material-symbols-outlined text-[18px]"
@@ -145,9 +145,9 @@ export default function Infrastructure() {
         </div>
       </div>
       {/* <!-- Dashboard Grid --> */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-md">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
         {/* <!-- Server API Details Card --> */}
-        {/* <div className="lg:col-span-1 p-md bg-surface border border-outline-variant rounded-lg flex flex-col space-y-md">
+        {/* <div className="lg:col-span-1 p-space-md bg-surface border border-outline-variant rounded-lg flex flex-col space-y-space-md">
           <div className="flex justify-between items-start">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-surface-container-high rounded-lg">
@@ -191,7 +191,7 @@ export default function Infrastructure() {
         </div>
         <AlertsCard serverId={serverId} />
         {/* <!-- Security/Access Tokens Card --> */}
-        <div className="lg:col-span-3 p-md bg-surface border border-outline-variant rounded-lg space-y-md">
+        <div className="lg:col-span-3 p-space-md bg-surface border border-outline-variant rounded-lg space-y-space-md">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-surface-container-high rounded-lg">
@@ -210,8 +210,8 @@ export default function Infrastructure() {
           </div>
           <div className="space-y-0 thin-border rounded-lg overflow-hidden">
             {/* <!-- Token Row --> */}
-            <div className="flex items-center justify-between p-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0">
-              <div className="flex items-center gap-md">
+            <div className="flex items-center justify-between p-space-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0">
+              <div className="flex items-center gap-space-md">
                 <div className="flex flex-col">
                   <span className="font-body-main font-semibold">
                     Primary Agent Token
@@ -221,7 +221,7 @@ export default function Infrastructure() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-lg">
+              <div className="flex items-center gap-space-lg">
                 <div className="hidden md:flex flex-col items-end">
                   <span className="font-label-caps text-on-surface-variant">
                     LAST USED
@@ -230,7 +230,7 @@ export default function Infrastructure() {
                     2 minutes ago
                   </span>
                 </div>
-                <div className="flex gap-sm">
+                <div className="flex gap-space-sm">
                   <button className="p-2 hover:text-primary transition-colors">
                     <span
                       className="material-symbols-outlined text-[20px]"
@@ -251,8 +251,8 @@ export default function Infrastructure() {
               </div>
             </div>
             {/* <!-- Token Row --> */}
-            <div className="flex items-center justify-between p-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0">
-              <div className="flex items-center gap-md">
+            <div className="flex items-center justify-between p-space-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0">
+              <div className="flex items-center gap-space-md">
                 <div className="flex flex-col">
                   <span className="font-body-main font-semibold">
                     Backup Monitoring
@@ -262,14 +262,14 @@ export default function Infrastructure() {
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-lg">
+              <div className="flex items-center gap-space-lg">
                 <div className="hidden md:flex flex-col items-end">
                   <span className="font-label-caps text-on-surface-variant">
                     LAST USED
                   </span>
                   <span className="font-body-main text-[13px]">Never</span>
                 </div>
-                <div className="flex gap-sm">
+                <div className="flex gap-space-sm">
                   <button className="p-2 hover:text-primary transition-colors">
                     <span
                       className="material-symbols-outlined text-[20px]"
@@ -292,7 +292,7 @@ export default function Infrastructure() {
           </div>
         </div>
         {/* <!-- Danger Zone --> */}
-        <div className="lg:col-span-3 p-md bg-surface border border-error rounded-lg space-y-sm">
+        <div className="lg:col-span-3 p-space-md bg-surface border border-error rounded-lg space-y-space-sm">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-h2 text-h2 text-error">Danger Zone</h3>
@@ -313,7 +313,7 @@ export default function Infrastructure() {
         </div>
       </div>
       {/* <!-- Documentation Link --> */}
-      <div className="pt-lg flex items-center justify-center">
+      <div className="pt-space-lg flex items-center justify-center">
         <a
           className="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors font-body-main"
           href="#"

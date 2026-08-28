@@ -23,7 +23,7 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-md min-h-screen">
+    <div className="flex-1 flex flex-col items-center justify-center p-space-md min-h-screen">
       <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm max-w-md w-full text-center">
         {status === "verifying" && (
           <p className="text-body-main text-on-surface-variant">Verifying your email…</p>

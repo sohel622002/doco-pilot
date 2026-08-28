@@ -1,0 +1,11 @@
+{
+  "name": "doco-pilot",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev:agent": "docker compose -f docker-compose.agent.yml up --build",
+    "stop:agent": "docker compose -f docker-compose.agent.yml down"
+  }
+}

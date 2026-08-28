@@ -7,30 +7,30 @@ export default function Header({ servers, selectedServer }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="h-16 fixed top-0 right-0 left-sidebar-width z-10 bg-surface-container-low border-b border-outline-variant flex items-center justify-between px-md w-auto">
+    <header className="h-14 fixed top-0 right-0 left-sidebar-width z-10 bg-surface-container-low border-b border-outline-variant flex items-center justify-between px-space-md w-auto">
       <div className="flex items-center flex-1 max-w-2xl">
         <div className="relative w-full">
-          <span className="material-symbols-outlined absolute left-sm top-1/2 -translate-y-1/2 text-on-surface-variant">
+          <span className="material-symbols-outlined absolute left-space-sm top-1/2 -translate-y-1/2 text-on-surface-variant">
             search
           </span>
 
           <input
-            className="w-full pl-lg pr-md py-xs bg-surface-container-low border border-outline-variant rounded-lg font-body-main focus:outline-none focus:ring-1 focus:ring-primary text-on-surface"
+            className="w-full pl-space-lg pr-space-md py-space-xs bg-surface-container-low border border-outline-variant rounded-lg font-body-main focus:outline-none focus:ring-1 focus:ring-primary text-on-surface"
             placeholder="Search containers, images, or networks..."
             type="text"
           />
         </div>
       </div>
 
-      <div className="flex items-center gap-md">
+      <div className="flex items-center gap-space-md">
         {/* SERVER DROPDOWN */}
         {servers && (
           <div className="relative">
             <div
               onClick={() => setOpen(!open)}
-              className="flex items-center gap-sm bg-surface-container-low border border-outline-variant px-sm py-1.5 rounded-lg cursor-pointer hover:bg-surface-container transition-colors"
+              className="flex items-center gap-space-sm bg-surface-container-low border border-outline-variant px-space-sm py-1.5 rounded-lg cursor-pointer hover:bg-surface-container transition-colors"
             >
-              <div className="flex items-center gap-xs">
+              <div className="flex items-center gap-space-xs">
                 <span className="material-symbols-outlined text-[20px] text-primary">
                   dns
                 </span>
@@ -47,7 +47,7 @@ export default function Header({ servers, selectedServer }) {
               </div>
 
               <span
-                className={`material-symbols-outlined text-[18px] text-on-surface-variant ml-xs transition-transform duration-300 ${
+                className={`material-symbols-outlined text-[18px] text-on-surface-variant ml-space-xs transition-transform duration-300 ${
                   open ? "rotate-180" : "rotate-0"
                 }`}
               >
@@ -71,13 +71,13 @@ export default function Header({ servers, selectedServer }) {
                     navigate(`/${server.id}`)
                     setOpen(false);
                   }}
-                  className={`px-sm py-1.5 cursor-pointer hover:bg-surface-container-high transition-colors ${
+                  className={`px-space-sm py-1.5 cursor-pointer hover:bg-surface-container-high transition-colors ${
                     selectedServer.id === server.id
                       ? "bg-surface-container-high"
                       : ""
                   }`}
                 >
-                  <div className="flex items-center gap-sm">
+                  <div className="flex items-center gap-space-sm">
                     <span className="material-symbols-outlined text-primary text-[18px]">
                       dns
                     </span>
@@ -99,7 +99,7 @@ export default function Header({ servers, selectedServer }) {
                   navigate("/servers");
                   setOpen(false);
                 }}
-                className="px-sm py-1.5 cursor-pointer hover:bg-surface-container-high transition-colors border-t border-outline-variant flex items-center gap-sm text-primary"
+                className="px-space-sm py-1.5 cursor-pointer hover:bg-surface-container-high transition-colors border-t border-outline-variant flex items-center gap-space-sm text-primary"
               >
                 <Plus size={16} />
                 <span className="text-sm font-medium">Manage Servers</span>
@@ -109,7 +109,7 @@ export default function Header({ servers, selectedServer }) {
         )}
 
         {/* ICONS */}
-        <div className="flex items-center gap-sm">
+        <div className="flex items-center gap-space-sm">
           <span className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
             notifications
           </span>

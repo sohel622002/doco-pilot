@@ -2,17 +2,18 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache su-exec
+
 COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY src/ ./src/
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-# Run as non-root user
-# Note: agent needs access to docker.sock — the socket gid on the host
-# is usually 999 (docker group). We add that group here.
-RUN addgroup -g 999 docker && \
-    adduser -S appuser -G docker
+# Non-root runtime user. Socket group membership is applied at start
+# by docker-entrypoint.sh (GID differs on Linux vs Docker Desktop).
+RUN adduser -S appuser
 
-USER appuser
-
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "src/index.js"]

@@ -30,9 +30,9 @@ export default function Sidebar(props) {
   ];
 
   return (
-    <aside className="bg-surface-container-low w-sidebar-width fixed left-0 top-0 border-r border-outline-variant flex flex-col h-full py-md px-sm">
-      <NavLink to="/servers" className="mb-lg px-xs block hover:opacity-80 transition-opacity">
-        <h1 className="font-h1 text-h1 text-on-surface">
+    <aside className="bg-surface-container-low w-sidebar-width fixed left-0 top-0 border-r border-outline-variant flex flex-col h-full py-space-md px-space-sm">
+      <NavLink to="/servers" className="mb-space-lg px-space-xs block hover:opacity-80 transition-opacity">
+        <h1 className="font-h2 text-h2 text-on-surface">
           {props.selectedServer?.name || "doco-pilot"}
         </h1>
         <p className="text-on-surface-variant text-label-caps opacity-70">
@@ -46,7 +46,7 @@ export default function Sidebar(props) {
             to={item.path}
             end={item.name === "Dashboard"}
             className={({ isActive }) =>
-              `flex items-center gap-sm px-sm py-xs rounded-lg transition-colors cursor-pointer ${
+              `flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg transition-colors cursor-pointer ${
                 isActive
                   ? "text-primary font-bold bg-surface-container"
                   : "text-on-surface-variant hover:bg-surface-container-high"
@@ -58,12 +58,12 @@ export default function Sidebar(props) {
           </NavLink>
         ))}
       </nav>
-      <div className="mt-auto space-y-base pt-md border-t border-outline-variant">
-        <div className="flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant  hover:bg-surface-container-high  transition-colors cursor-pointer">
+      <div className="mt-auto space-y-base pt-space-md border-t border-outline-variant">
+        <div className="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg text-on-surface-variant  hover:bg-surface-container-high  transition-colors cursor-pointer">
           <span className="material-symbols-outlined">terminal</span>
           <span className="font-body-main">System Logs</span>
         </div>
-        <div className="flex items-center gap-sm px-sm py-xs rounded-lg text-on-surface-variant  hover:bg-surface-container-high  transition-colors cursor-pointer">
+        <div className="flex items-center gap-space-sm px-space-sm py-space-xs rounded-lg text-on-surface-variant  hover:bg-surface-container-high  transition-colors cursor-pointer">
           <span className="material-symbols-outlined">help_outline</span>
           <span className="font-body-main">Support</span>
         </div>

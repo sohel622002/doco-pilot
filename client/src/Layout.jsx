@@ -63,11 +63,11 @@ export default function Layout() {
     <>
       <Sidebar selectedServer={selectedServer} />
       <Header servers={servers} selectedServer={selectedServer} />
-      <main className="ml-sidebar-width pt-16 min-h-screen">
+      <main className="ml-sidebar-width pt-14 min-h-screen">
         {systemData?.agentState === "online" ? (
           <Outlet />
         ) : (
-          <div className="max-w-container-max mx-auto p-md">
+          <div className="max-w-container-max mx-auto p-space-md">
             <NodConnectionError />
           </div>
         )}

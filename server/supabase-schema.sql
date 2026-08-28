@@ -7,7 +7,9 @@ create table if not exists public.profiles (
   id          uuid primary key default gen_random_uuid(),
   name        text not null,
   email       text not null unique,
-  password_hash text not null,
+  -- Nullable for Google-only accounts (no local password)
+  password_hash text,
+  google_id   text unique,
   email_verified boolean not null default false,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()

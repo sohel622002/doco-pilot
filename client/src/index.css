@@ -56,13 +56,15 @@
   --radius-xl: 0.5rem;
   --radius-full: 0.75rem;
 
-  --spacing-sidebar-width: 240px;
+  /* Density ~85%: use space-* names so they don't collide with
+     Tailwind container sizes (max-w-md, max-w-sm, …). */
+  --spacing-sidebar-width: 220px;
   --spacing-container-max: 1200px;
   --spacing-base: 4px;
-  --spacing-md: 24px;
-  --spacing-sm: 16px;
-  --spacing-xs: 8px;
-  --spacing-lg: 48px;
+  --spacing-space-md: 16px;
+  --spacing-space-sm: 12px;
+  --spacing-space-xs: 6px;
+  --spacing-space-lg: 32px;
 
   --font-body: "Inter", sans-serif;
   --font-label-caps: "Inter", sans-serif;
@@ -71,38 +73,44 @@
   --font-body-large: "Inter", sans-serif;
   --font-h2: "Inter", sans-serif;
 
-  --text-body-main: 14px;
-  --text-body-main--line-height: 20px;
+  --text-body-main: 13px;
+  --text-body-main--line-height: 18px;
   --text-body-main--letter-spacing: 0em;
   --text-body-main--font-weight: 400;
 
-  --text-label-caps: 12px;
-  --text-label-caps--line-height: 16px;
+  --text-label-caps: 11px;
+  --text-label-caps--line-height: 14px;
   --text-label-caps--letter-spacing: 0.05em;
   --text-label-caps--font-weight: 500;
 
-  --text-code: 13px;
-  --text-code--line-height: 18px;
+  --text-code: 12px;
+  --text-code--line-height: 16px;
   --text-code--letter-spacing: 0em;
   --text-code--font-weight: 450;
 
-  --text-h1: 24px;
-  --text-h1--line-height: 32px;
+  --text-h1: 20px;
+  --text-h1--line-height: 28px;
   --text-h1--letter-spacing: -0.02em;
   --text-h1--font-weight: 600;
 
-  --text-body-large: 16px;
-  --text-body-large--line-height: 24px;
+  --text-body-large: 14px;
+  --text-body-large--line-height: 20px;
   --text-body-large--letter-spacing: 0em;
   --text-body-large--font-weight: 400;
 
-  --text-h2: 18px;
-  --text-h2--line-height: 24px;
+  --text-h2: 16px;
+  --text-h2--line-height: 22px;
   --text-h2--letter-spacing: -0.01em;
   --text-h2--font-weight: 600;
 
-  --font-h1-size: 24px;
-  --font-h1-line: 32px;
+  /* Compact figures for dashboard stats (prefer over text-h1) */
+  --text-stat: 22px;
+  --text-stat--line-height: 28px;
+  --text-stat--letter-spacing: -0.02em;
+  --text-stat--font-weight: 600;
+
+  --font-h1-size: 20px;
+  --font-h1-line: 28px;
 }
 
 html[data-theme="dark"] {
@@ -177,4 +185,10 @@ button {
 
 button:disabled {
   @apply opacity-50 cursor-default;
+}
+
+/* Material icons scale with the denser UI */
+.material-symbols-outlined {
+  font-size: 20px;
+  font-variation-settings: "OPSZ" 20;
 }
