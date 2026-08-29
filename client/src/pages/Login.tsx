@@ -129,7 +129,7 @@ export default function Login() {
             {error && <p className="text-error text-body-main">{error}</p>}
             <button
               disabled={loading}
-              className="w-full h-11 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-container transition-colors shadow-sm mt-2"
+              className="w-full h-11 bg-primary text-on-primary font-medium rounded-full hover:bg-primary-container transition-colors shadow-sm mt-2"
               type="submit"
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -147,7 +147,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={startGoogleAuth}
-                className="flex items-center justify-center gap-2 w-full h-10 border border-outline-variant rounded-lg bg-surface hover:bg-surface-container transition-colors"
+                className="flex items-center justify-center gap-2 w-full h-10 border border-outline-variant rounded-full bg-surface hover:bg-surface-container transition-colors"
               >
                 <img
                   alt="Google"

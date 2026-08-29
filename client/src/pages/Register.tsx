@@ -81,7 +81,7 @@ export default function Register() {
             {error && <p className="text-error text-body-main">{error}</p>}
             <div className="pt-space-xs">
               <button
-                className="cursor-pointer w-full h-11 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-container transition-colors flex items-center justify-center gap-space-xs disabled:opacity-50"
+                className="cursor-pointer w-full h-11 bg-primary text-on-primary font-medium rounded-full hover:bg-primary-container transition-colors flex items-center justify-center gap-space-xs disabled:opacity-50"
                 type="submit"
                 disabled={loading}
               >
@@ -91,7 +91,7 @@ export default function Register() {
           </form>
           <div className="mt-space-md pt-space-md border-t border-outline-variant flex flex-col gap-space-sm">
             <button
-              className="cursor-pointer w-full h-11 flex items-center justify-center gap-space-xs border border-outline-variant rounded-lg text-body-main hover:bg-surface-container transition-colors"
+              className="cursor-pointer w-full h-11 flex items-center justify-center gap-space-xs border border-outline-variant rounded-full text-body-main hover:bg-surface-container transition-colors"
               type="button"
               onClick={startGoogleAuth}
             >

@@ -55,7 +55,7 @@ function AddServerForm({ onCreated }) {
       <button
         type="submit"
         disabled={loading}
-        className="h-10 px-space-md flex items-center gap-space-xs bg-primary text-on-primary rounded-lg font-body-main font-bold hover:opacity-90 disabled:opacity-50"
+        className="h-10 px-space-md flex items-center gap-space-xs bg-primary text-on-primary rounded-full font-body-main font-bold hover:opacity-90 disabled:opacity-50"
       >
         <Plus size={16} />
         {loading ? "Creating…" : "Add Server"}

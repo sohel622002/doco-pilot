@@ -85,7 +85,7 @@ function AlertsCard({ serverId }) {
           <button
             type="submit"
             disabled={loading}
-            className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-space-md py-space-xs rounded-full bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? "Saving…" : "Save"}
           </button>
@@ -133,7 +133,7 @@ export default function Infrastructure() {
           </h2>
         </div>
         <div className="flex gap-space-sm">
-          <button className="flex items-center gap-2 px-4 py-2 thin-border rounded-lg bg-surface hover:bg-surface-container-low transition-colors font-body-main">
+          <button className="flex items-center gap-2 px-4 py-2 thin-border rounded-full bg-surface hover:bg-surface-container-low transition-colors font-body-main">
             <span
               className="material-symbols-outlined text-[18px]"
               data-icon="refresh"
@@ -204,7 +204,7 @@ export default function Infrastructure() {
               </div>
               <h3 className="font-h2 text-h2">API Access &amp; Security</h3>
             </div>
-            <button className="px-4 py-2 bg-primary text-on-primary rounded-lg font-body-main text-[13px] hover:opacity-90">
+            <button className="px-4 py-2 bg-primary text-on-primary rounded-full font-body-main text-[13px] hover:opacity-90">
               Create New Token
             </button>
           </div>
@@ -305,7 +305,7 @@ export default function Infrastructure() {
             <button
               onClick={handleDeleteServer}
               disabled={deleting}
-              className="px-4 py-2 bg-error text-on-error rounded-lg font-body-main text-[13px] hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
+              className="px-4 py-2 bg-error text-on-error rounded-full font-body-main text-[13px] hover:opacity-90 disabled:opacity-50 whitespace-nowrap"
             >
               {deleting ? "Deleting…" : "Delete Server"}
             </button>

@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import { WS_ACTIONS } from "../lib/actions";
 import { useSystemStore } from "../store/system";
 import { useContainerStore } from "../store/container";
+import { Card, Badge, StatCard } from "../components/ui";
 
 export default function Home() {
   const { serverId } = useParams();
@@ -46,124 +47,59 @@ export default function Home() {
           </p>
         </div>
         <div className="flex gap-space-sm">
-          <div className="flex items-center gap-space-xs px-space-sm py-space-xs rounded border border-outline-variant bg-surface">
+          <Badge tone="success">
             <span className="h-2 w-2 rounded-full bg-green-500"></span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant">
-              Status: Operational
-            </span>
-          </div>
+            Status: Operational
+          </Badge>
         </div>
       </div>
       {/* <!-- System Health Bento Grid --> */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-space-md mb-space-lg">
-        {/* <!-- CPU Card --> */}
-        <div className="md:col-span-1 bg-surface-container-low border border-outline-variant p-space-md rounded-xl flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start mb-space-sm">
-              <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-                CPU Usage
+        <StatCard
+          label="CPU Usage"
+          icon="memory"
+          value={systemData?.cpu?.usagePercent ?? 0}
+          unit="%"
+          progress={systemData?.cpu?.usagePercent ?? 0}
+        />
+        <StatCard
+          label="Memory"
+          icon="storage"
+          value={systemData?.memory?.usedGB}
+          unit={`GB / ${systemData?.memory?.totalGB} GB`}
+          progress={systemData?.memory?.usagePercent}
+        />
+        <StatCard
+          label="Active Containers"
+          icon="view_quilt"
+          value={runningContainers}
+          footer={
+            <div className="flex gap-space-xs">
+              <span className="font-label-caps text-label-caps text-on-surface-variant">
+                {pausedContainers} Paused
               </span>
-              <span className="material-symbols-outlined text-primary">
-                memory
+              <span className="font-label-caps text-label-caps text-on-surface-variant">
+                •
               </span>
-            </div>
-            <div className="flex items-baseline gap-space-xs mb-space-xs">
-              <span className="font-h1 text-stat">
-                {systemData?.cpu?.usagePercent ?? 0}
-              </span>
-              <span className="font-body-main text-body-main text-on-surface-variant">
-                %
-              </span>
-            </div>
-          </div>
-          <div className="w-full bg-secondary-container h-1 rounded-full overflow-hidden">
-            <div
-              className="bg-primary h-full"
-              style={{ width: `${systemData?.cpu?.usagePercent ?? 0}%` }}
-            ></div>
-          </div>
-        </div>
-        {/* <!-- Memory Card --> */}
-        <div className="md:col-span-1 bg-surface-container-low border border-outline-variant p-space-md rounded-xl flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start mb-space-sm">
-              <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-                Memory
-              </span>
-              <span className="material-symbols-outlined text-primary">
-                storage
+              <span className="font-label-caps text-label-caps text-error">
+                {stoppedContainers} Stopped
               </span>
             </div>
-            <div className="flex items-baseline gap-space-xs mb-space-xs">
-              <span className="font-h1 text-stat">
-                {systemData?.memory?.usedGB}
-              </span>
-              <span className="font-body-main text-body-main text-on-surface-variant">
-                GB / {systemData?.memory?.totalGB} GB
-              </span>
+          }
+        />
+        <StatCard
+          label="Disk I/O"
+          icon="speed"
+          value="12.4"
+          unit="MB/s"
+          footer={
+            <div className="text-xs font-code text-on-surface-variant opacity-60">
+              Read: 8.2MB/s | Write: 4.2MB/s
             </div>
-          </div>
-          <div className="w-full bg-secondary-container h-1 rounded-full overflow-hidden">
-            <div
-              className="bg-primary h-full"
-              style={{ width: `${systemData?.memory?.usagePercent}%` }}
-            ></div>
-          </div>
-        </div>
-        {/* <!-- Containers Card --> */}
-        <div className="md:col-span-1 bg-surface-container-low border border-outline-variant p-space-md rounded-xl flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start mb-space-sm">
-              <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-                Active Containers
-              </span>
-              <span className="material-symbols-outlined text-primary">
-                view_quilt
-              </span>
-            </div>
-            <div className="flex items-baseline gap-space-xs mb-space-xs">
-              <span className="font-h1 text-stat">{runningContainers}</span>
-              <span className="font-body-main text-body-main text-green-600">
-                Running
-              </span>
-            </div>
-          </div>
-          <div className="flex gap-space-xs">
-            <span className="font-label-caps text-label-caps text-on-surface-variant">
-              {pausedContainers} Paused
-            </span>
-            <span className="font-label-caps text-label-caps text-on-surface-variant">
-              •
-            </span>
-            <span className="font-label-caps text-label-caps text-error">
-              {stoppedContainers} Stopped
-            </span>
-          </div>
-        </div>
-        {/* <!-- Disk Card --> */}
-        <div className="md:col-span-1 bg-surface-container-low border border-outline-variant p-space-md rounded-xl flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start mb-space-sm">
-              <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
-                Disk I/O
-              </span>
-              <span className="material-symbols-outlined text-primary">
-                speed
-              </span>
-            </div>
-            <div className="flex items-baseline gap-space-xs mb-space-xs">
-              <span className="font-h1 text-stat">12.4</span>
-              <span className="font-body-main text-body-main text-on-surface-variant">
-                MB/s
-              </span>
-            </div>
-          </div>
-          <div className="text-xs font-code text-on-surface-variant opacity-60">
-            Read: 8.2MB/s | Write: 4.2MB/s
-          </div>
-        </div>
+          }
+        />
         {/* <!-- Resource Trend Chart — real CPU/memory samples, polled every 5s --> */}
-        <div className="md:col-span-3 bg-surface-container-low border border-outline-variant p-space-md rounded-xl min-h-80 flex flex-col">
+        <Card className="md:col-span-3 min-h-80 flex flex-col">
           <div className="flex justify-between items-center mb-space-lg">
             <h3 className="font-h2 text-h2 text-on-surface">
               Resource Usage Trend
@@ -206,9 +142,9 @@ export default function Home() {
             <span>{history[0] ? new Date(history[0].ts).toLocaleTimeString() : "—"}</span>
             <span>Now</span>
           </div>
-        </div>
+        </Card>
         {/* <!-- Recent Events / Logs --> */}
-        <div className="md:col-span-1 bg-surface-container-low border border-outline-variant p-space-md rounded-xl flex flex-col">
+        <Card className="md:col-span-1 flex flex-col">
           <div className="flex justify-between items-center mb-space-md">
             <h3 className="font-h2 text-h2 text-on-surface">Recent Events</h3>
             <span
@@ -286,56 +222,32 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <button className="mt-space-md w-full py-space-xs border border-outline-variant rounded font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-container transition-colors">
+          <button className="mt-space-md w-full py-space-xs border border-outline-variant rounded-full font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-container transition-colors">
             View All Logs
           </button>
-        </div>
+        </Card>
       </div>
       {/* <!-- Quick Actions Grid --> */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
-        <div className="bg-surface-container-low border border-outline-variant p-space-md rounded-xl hover:border-primary transition-colors cursor-pointer group">
-          <div className="flex items-center gap-space-md">
-            <div className="h-10 w-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-              <span className="material-symbols-outlined">rocket_launch</span>
+        {[
+          { icon: "rocket_launch", title: "Quick Deploy", desc: "Launch from templates" },
+          { icon: "cleaning_services", title: "Prune System", desc: "Cleanup unused resources" },
+          { icon: "analytics", title: "Export Metrics", desc: "Download CSV/JSON reports" },
+        ].map((action) => (
+          <Card key={action.title} hoverable className="group">
+            <div className="flex items-center gap-space-md">
+              <div className="h-10 w-10 rounded-full bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+                <span className="material-symbols-outlined">{action.icon}</span>
+              </div>
+              <div>
+                <h4 className="font-h2 text-h2 text-on-surface">{action.title}</h4>
+                <p className="font-body-main text-body-main text-on-surface-variant">
+                  {action.desc}
+                </p>
+              </div>
             </div>
-            <div>
-              <h4 className="font-h2 text-h2 text-on-surface">Quick Deploy</h4>
-              <p className="font-body-main text-body-main text-on-surface-variant">
-                Launch from templates
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-surface-container-low border border-outline-variant p-space-md rounded-xl hover:border-primary transition-colors cursor-pointer group">
-          <div className="flex items-center gap-space-md">
-            <div className="h-10 w-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-              <span className="material-symbols-outlined">
-                cleaning_services
-              </span>
-            </div>
-            <div>
-              <h4 className="font-h2 text-h2 text-on-surface">Prune System</h4>
-              <p className="font-body-main text-body-main text-on-surface-variant">
-                Cleanup unused resources
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-surface-container-low border border-outline-variant p-space-md rounded-xl hover:border-primary transition-colors cursor-pointer group">
-          <div className="flex items-center gap-space-md">
-            <div className="h-10 w-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
-              <span className="material-symbols-outlined">analytics</span>
-            </div>
-            <div>
-              <h4 className="font-h2 text-h2 text-on-surface">
-                Export Metrics
-              </h4>
-              <p className="font-body-main text-body-main text-on-surface-variant">
-                Download CSV/JSON reports
-              </p>
-            </div>
-          </div>
-        </div>
+          </Card>
+        ))}
       </div>
     </div>
   );

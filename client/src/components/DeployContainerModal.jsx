@@ -111,13 +111,13 @@ export default function DeployContainerModal({ serverId, open, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="px-space-md py-space-xs rounded border border-outline-variant text-on-surface font-body-main hover:bg-surface-container-high transition-colors"
+              className="px-space-md py-space-xs rounded-full border border-outline-variant text-on-surface font-body-main hover:bg-surface-container-high transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity"
+              className="px-space-md py-space-xs rounded-full bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity"
             >
               Deploy
             </button>

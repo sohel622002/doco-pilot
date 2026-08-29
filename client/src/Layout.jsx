@@ -1,6 +1,5 @@
 import { Navigate, Outlet, useParams } from "react-router-dom";
 import Header from "./components/Header";
-import Sidebar from "./components/Sidebar";
 import { useServers } from "./hooks/useServers";
 import { useEffect } from "react";
 import { useSystemStore } from "./store/system";
@@ -61,9 +60,8 @@ export default function Layout() {
 
   return (
     <>
-      <Sidebar selectedServer={selectedServer} />
       <Header servers={servers} selectedServer={selectedServer} />
-      <main className="ml-sidebar-width pt-14 min-h-screen">
+      <main className="pt-header-height min-h-screen">
         {systemData?.agentState === "online" ? (
           <Outlet />
         ) : (

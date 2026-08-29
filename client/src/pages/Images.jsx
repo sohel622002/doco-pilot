@@ -63,7 +63,7 @@ export default function Images() {
         </div>
         <form onSubmit={handlePull} className="flex items-center gap-space-xs">
           <input
-            className="px-space-sm py-space-xs bg-surface-container-low border border-outline-variant rounded-lg font-code text-code text-on-surface"
+            className="px-space-sm py-space-xs bg-surface-container-low border border-outline-variant rounded-full font-code text-code text-on-surface"
             placeholder="e.g. nginx:latest"
             value={pullValue}
             onChange={(e) => setPullValue(e.target.value)}
@@ -71,7 +71,7 @@ export default function Images() {
           <button
             type="submit"
             disabled={pulling}
-            className="flex items-center gap-space-xs bg-primary text-on-primary px-space-md py-space-xs rounded-lg font-body-main font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="flex items-center gap-space-xs bg-primary text-on-primary px-space-md py-space-xs rounded-full font-body-main font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             <Download size={16} />
             {pulling ? "Pulling…" : "Pull Image"}

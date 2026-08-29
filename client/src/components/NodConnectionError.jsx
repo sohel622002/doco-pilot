@@ -86,13 +86,13 @@ export default function NodConnectionError() {
             </ul>
           </div>
           <div className="flex items-center justify-center gap-space-md pt-space-xs">
-            <button className="bg-primary text-on-primary px-space-md py-space-sm rounded-lg font-body-main font-semibold hover:opacity-90 transition-all active:scale-95 flex items-center gap-space-xs">
+            <button className="bg-primary text-on-primary px-space-md py-space-sm rounded-full font-body-main font-semibold hover:opacity-90 transition-all active:scale-95 flex items-center gap-space-xs">
               <span className="material-symbols-outlined" data-icon="refresh">
                 refresh
               </span>
               Retry Connection
             </button>
-            <button className="bg-surface-container-lowest border border-outline-variant text-on-surface-variant px-space-md py-space-sm rounded-lg font-body-main hover:bg-surface-container transition-all active:scale-95 flex items-center gap-space-xs">
+            <button className="bg-surface-container-lowest border border-outline-variant text-on-surface-variant px-space-md py-space-sm rounded-full font-body-main hover:bg-surface-container transition-all active:scale-95 flex items-center gap-space-xs">
               <span
                 className="material-symbols-outlined"
                 data-icon="receipt_long"

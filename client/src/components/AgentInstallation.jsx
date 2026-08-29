@@ -25,7 +25,7 @@ export default function AgentInstallation() {
               {serverData?.dockerCommand}
             </pre>
           </div>
-          <button className="absolute top-2 right-2 pt-2 pb-1 px-1 bg-surface/10 hover:bg-surface/20 text-inverse-on-surface rounded-lg transition-colors border border-white/5">
+          <button className="absolute top-2 right-2 pt-2 pb-1 px-1 bg-surface/10 hover:bg-surface/20 text-inverse-on-surface rounded-full transition-colors border border-white/5">
             <Copy />
           </button>
         </div>

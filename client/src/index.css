@@ -51,20 +51,25 @@
   --color-on-tertiary-fixed-variant: #723600;
   --color-on-error-container: #93000a;
 
-  --radius-DEFAULT: 0.125rem;
-  --radius-lg: 0.25rem;
-  --radius-xl: 0.5rem;
-  --radius-full: 0.75rem;
+  --radius-DEFAULT: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.75rem;
+  --radius-full: 999px;
 
-  /* Density ~85%: use space-* names so they don't collide with
+  --shadow-card: 0 1px 2px rgba(27, 27, 35, 0.04), 0 8px 24px -12px rgba(68, 65, 204, 0.18);
+  --shadow-pill: 0 1px 2px rgba(27, 27, 35, 0.06);
+
+  /* use space-* names so they don't collide with
      Tailwind container sizes (max-w-md, max-w-sm, …). */
-  --spacing-sidebar-width: 220px;
+  --spacing-header-height: 72px;
   --spacing-container-max: 1200px;
   --spacing-base: 4px;
-  --spacing-space-md: 16px;
+  --spacing-space-md: 20px;
   --spacing-space-sm: 12px;
   --spacing-space-xs: 6px;
   --spacing-space-lg: 32px;
+  --spacing-space-xl: 48px;
 
   --font-body: "Inter", sans-serif;
   --font-label-caps: "Inter", sans-serif;
@@ -167,6 +172,13 @@ html[data-theme="dark"] {
 
 body {
   background-color: var(--color-surface);
+}
+
+/* Design-system lift: every existing bordered surface card (built before the
+   ui/Card component existed) picks up the same soft shadow automatically,
+   so pages don't need per-card edits to feel consistent. */
+[class*="rounded-xl"][class*="border-outline-variant"] {
+  box-shadow: var(--shadow-card);
 }
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;

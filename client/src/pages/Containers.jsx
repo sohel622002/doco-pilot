@@ -73,7 +73,7 @@ export default function Containers() {
           </p>
         </div>
         <div className="flex items-center gap-space-sm">
-          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-full cursor-pointer hover:bg-surface-container transition-colors">
             <span className="material-symbols-outlined text-sm">
               filter_list
             </span>
@@ -81,7 +81,7 @@ export default function Containers() {
               Status: All
             </span>
           </div>
-          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-lg cursor-pointer hover:bg-surface-container transition-colors">
+          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-full cursor-pointer hover:bg-surface-container transition-colors">
             <span className="material-symbols-outlined text-sm">stacks</span>
             <span className="text-label-caps uppercase tracking-wider">
               Stack: All
@@ -89,7 +89,7 @@ export default function Containers() {
           </div>
           <button
             onClick={() => setDeployOpen(true)}
-            className="bg-primary text-on-primary px-space-md py-space-xs rounded-lg font-body-main font-bold hover:opacity-90 transition-opacity"
+            className="bg-primary text-on-primary px-space-md py-space-xs rounded-full font-body-main font-bold hover:opacity-90 transition-opacity"
           >
             Deploy Container
           </button>
@@ -337,10 +337,10 @@ export default function Containers() {
                 Showing 4 of 34 containers
               </p>
               <div className="flex items-center gap-space-sm">
-                <button className="px-space-sm py-space-xs border border-outline-variant rounded-lg text-label-caps hover:bg-surface-container-low transition-colors">
+                <button className="px-space-sm py-space-xs border border-outline-variant rounded-full text-label-caps hover:bg-surface-container-low transition-colors">
                   Previous
                 </button>
-                <button className="px-space-sm py-space-xs border border-outline-variant rounded-lg text-label-caps hover:bg-surface-container-low transition-colors">
+                <button className="px-space-sm py-space-xs border border-outline-variant rounded-full text-label-caps hover:bg-surface-container-low transition-colors">
                   Next
                 </button>
               </div>

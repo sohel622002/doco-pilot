@@ -93,7 +93,7 @@ function ProfileCard() {
           <button
             type="submit"
             disabled={loading}
-            className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-space-md py-space-xs rounded-full bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? "Saving…" : "Save Changes"}
           </button>
@@ -179,7 +179,7 @@ function ChangePasswordCard() {
           <button
             type="submit"
             disabled={loading}
-            className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-space-md py-space-xs rounded-full bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             {loading ? "Updating…" : "Update Password"}
           </button>
@@ -289,10 +289,10 @@ export default function Settings() {
                 </div>
               </div>
               <div className="flex justify-end gap-space-sm pt-space-md">
-                <button className="px-space-md py-space-xs rounded border border-outline-variant text-on-surface font-body-main hover:bg-surface-container-high transition-colors">
+                <button className="px-space-md py-space-xs rounded-full border border-outline-variant text-on-surface font-body-main hover:bg-surface-container-high transition-colors">
                   Discard
                 </button>
-                <button className="px-space-md py-space-xs rounded bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity">
+                <button className="px-space-md py-space-xs rounded-full bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity">
                   Apply Changes
                 </button>
               </div>
