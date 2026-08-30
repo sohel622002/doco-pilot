@@ -13,6 +13,7 @@ import { WebSocketProvider } from "./context/WebSocketContext";
 import Layout from "./Layout";
 import RootRedirect from "./pages/RootRedirect";
 import Servers from "./pages/Servers";
+import RedesignedHome from "./pages/RedesignedHome";
 
 function App() {
   return (
@@ -28,6 +29,8 @@ function App() {
             <Route path="/" element={<RootRedirect />} />
             <Route path="/servers" element={<Servers />} />
             
+            {/* <Route  path="/:serverId" element={<RedesignedHome />}>
+              <Route index element={<RedesignedHome />} /> */}
             <Route  path="/:serverId" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="containers" element={<Containers />} />

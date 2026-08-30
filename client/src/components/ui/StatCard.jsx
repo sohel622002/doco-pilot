@@ -9,11 +9,11 @@ export default function StatCard({ label, icon, value, unit, footer, progress })
             {label}
           </span>
           {icon && (
-            <span className="material-symbols-outlined text-primary">{icon}</span>
+            <span className="material-symbols-outlined">{icon}</span>
           )}
         </div>
         <div className="flex items-baseline gap-space-xs mb-space-xs">
-          <span className="font-h1 text-stat">{value}</span>
+          <span className="text-3xl text-stat">{value}</span>
           {unit && (
             <span className="font-body-main text-body-main text-on-surface-variant">
               {unit}

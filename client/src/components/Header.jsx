@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, UserRound } from "lucide-react";
 
 const NAV_ITEMS = [
   { name: "Dashboard", icon: "dashboard", path: "" },
@@ -15,24 +15,17 @@ export default function Header({ servers, selectedServer }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-20 h-header-height bg-surface-container-lowest/90 backdrop-blur-md border-b border-outline-variant flex items-center gap-space-md px-space-lg">
+    <header className="grid grid-cols-3 items-center justify-between p-3 px-4 bg-card rounded-md">
       {/* BRAND */}
       <NavLink
         to="/servers"
         className="flex items-center gap-space-xs shrink-0 hover:opacity-80 transition-opacity"
       >
-        <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center">
-          <span className="material-symbols-outlined text-on-primary text-[18px]">
-            hub
-          </span>
-        </div>
-        <span className="font-h2 text-h2 text-on-surface hidden sm:block">
-          doco-pilot
-        </span>
+        <span className="logo text-3xl">DocoPilot</span>
       </NavLink>
 
       {/* TOP NAV PILLS */}
-      <nav className="flex items-center gap-1 bg-surface-container rounded-full p-1 mx-auto shadow-pill">
+      {/* <nav className="flex items-center gap-1 bg-surface-container rounded-full p-1 mx-auto shadow-pill">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.name}
@@ -52,9 +45,10 @@ export default function Header({ servers, selectedServer }) {
             <span className="hidden md:inline">{item.name}</span>
           </NavLink>
         ))}
-      </nav>
+      </nav> */}
+      <div></div>
 
-      <div className="flex items-center gap-space-sm shrink-0">
+      <div className="flex items-center justify-end gap-space-sm shrink-0">
         {/* SERVER DROPDOWN */}
         {servers && selectedServer && (
           <div className="relative">
@@ -151,9 +145,10 @@ export default function Header({ servers, selectedServer }) {
 
         {/* PROFILE */}
         <div className="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden cursor-pointer">
-          <span className="material-symbols-outlined text-on-primary-container text-[18px]">
+          <UserRound size={18}/>
+          {/* <span className="material-symbols-outlined text-on-primary-container text-[18px]">
             account_circle
-          </span>
+          </span> */}
         </div>
       </div>
     </header>

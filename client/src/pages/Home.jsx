@@ -36,7 +36,7 @@ export default function Home() {
   }, [serverId]);
 
   return (
-    <div className="max-w-container-max mx-auto p-space-md">
+    <div className="">
       <div className="mb-space-lg flex justify-between items-end">
         <div>
           <h2 className="font-h1 text-h1 text-on-surface mb-space-xs">
@@ -54,7 +54,7 @@ export default function Home() {
         </div>
       </div>
       {/* <!-- System Health Bento Grid --> */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-space-md mb-space-lg">
+      <div className="grid grid-cols-3 gap-3">
         <StatCard
           label="CPU Usage"
           icon="memory"
@@ -87,7 +87,7 @@ export default function Home() {
             </div>
           }
         />
-        <StatCard
+        {/* <StatCard
           label="Disk I/O"
           icon="speed"
           value="12.4"
@@ -97,7 +97,7 @@ export default function Home() {
               Read: 8.2MB/s | Write: 4.2MB/s
             </div>
           }
-        />
+        /> */}
         {/* <!-- Resource Trend Chart — real CPU/memory samples, polled every 5s --> */}
         <Card className="md:col-span-3 min-h-80 flex flex-col">
           <div className="flex justify-between items-center mb-space-lg">
@@ -144,7 +144,7 @@ export default function Home() {
           </div>
         </Card>
         {/* <!-- Recent Events / Logs --> */}
-        <Card className="md:col-span-1 flex flex-col">
+        {/* <Card className="md:col-span-1 flex flex-col">
           <div className="flex justify-between items-center mb-space-md">
             <h3 className="font-h2 text-h2 text-on-surface">Recent Events</h3>
             <span
@@ -154,7 +154,7 @@ export default function Home() {
               history
             </span>
           </div>
-          <div className="flex-1 space-y-space-md overflow-y-auto custom-scrollbar pr-space-xs">
+          <div className="flex-1 space-y-space-md overflow-y-auto pr-space-xs">
             <div className="flex gap-space-sm">
               <div className="mt-1 h-2 w-2 rounded-full bg-green-500 shrink-0"></div>
               <div>
@@ -225,10 +225,10 @@ export default function Home() {
           <button className="mt-space-md w-full py-space-xs border border-outline-variant rounded-full font-label-caps text-label-caps text-on-surface-variant hover:bg-surface-container transition-colors">
             View All Logs
           </button>
-        </Card>
+        </Card> */}
       </div>
       {/* <!-- Quick Actions Grid --> */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-space-md">
         {[
           { icon: "rocket_launch", title: "Quick Deploy", desc: "Launch from templates" },
           { icon: "cleaning_services", title: "Prune System", desc: "Cleanup unused resources" },
@@ -248,7 +248,7 @@ export default function Home() {
             </div>
           </Card>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }

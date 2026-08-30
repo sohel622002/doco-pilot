@@ -63,7 +63,7 @@ export default function Containers() {
   }, [serverId]);
 
   return (
-    <div className="max-w-container-max mx-auto p-space-md">
+    <div className="">
       {/* <!-- Page Header & Filters --> */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
         <div>
@@ -141,7 +141,7 @@ export default function Containers() {
             </div>
           </div>
           <div className="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
-            <div className="overflow-x-auto custom-scrollbar">
+            <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant">

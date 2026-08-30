@@ -4,6 +4,15 @@ import { useServers } from "./hooks/useServers";
 import { useEffect } from "react";
 import { useSystemStore } from "./store/system";
 import NodConnectionError from "./components/NodConnectionError";
+import { NavLink, useNavigate } from "react-router-dom";
+
+const NAV_ITEMS = [
+  { name: "Dashboard", path: "" },
+  { name: "Containers", path: "/containers" },
+  { name: "Images", path: "/images" },
+  { name: "Infrastructure", path: "/infrastructure" },
+  { name: "Settings", path: "/settings" },
+];
 
 export default function Layout() {
   const { serverId } = useParams();
@@ -60,16 +69,57 @@ export default function Layout() {
 
   return (
     <>
-      <Header servers={servers} selectedServer={selectedServer} />
-      <main className="pt-header-height min-h-screen">
-        {systemData?.agentState === "online" ? (
-          <Outlet />
-        ) : (
-          <div className="max-w-container-max mx-auto p-space-md">
-            <NodConnectionError />
+      <section className="flex flex-col gap-3 max-w-5xl mx-auto h-screen p-4 overflow-hidden">
+        <Header servers={servers} selectedServer={selectedServer} />
+        <main className="flex flex-1 h-full gap-3 overflow-hidden">
+          <aside className="min-w-60 bg-card rounded-md p-3">
+            <ul>
+              {NAV_ITEMS.map((item) => (
+                <CustomNavLink
+                  key={item.name}
+                  item={item}
+                  selectedServer={selectedServer}
+                />
+              ))}
+              {/* <NavLink>Containers</NavLink>
+              <NavLink>Images</NavLink>
+              <NavLink>Volumes</NavLink> */}
+            </ul>
+          </aside>
+          <div className="bg-card rounded-md flex-1 p-4 overflow-auto">
+            {systemData?.agentState === "online" ? (
+              <Outlet />
+            ) : (
+              <div className="max-w-container-max mx-auto p-space-md">
+                <NodConnectionError />
+              </div>
+            )}
           </div>
-        )}
-      </main>
+        </main>
+      </section>
     </>
+  );
+}
+
+function CustomNavLink({ item, selectedServer }) {
+  return (
+    <li>
+      <NavLink
+        to={`/${selectedServer?.id ?? ""}${item.path}`}
+        end={item.path === ""}
+        className={({ isActive }) =>
+          `relative block py-2 px-2 rounded-sm ${
+            isActive
+              ? "bg-primary before:absolute before:content-none before:left-0 before:h-full before:bg-primary"
+              : "text-on-surface-variant hover:text-on-surface"
+          }`
+        }
+      >
+        <span className="material-symbols-outlined text-[18px]">
+          {item.icon}
+        </span>
+        <span className="hidden md:inline">{item.name}</span>
+      </NavLink>
+    </li>
   );
 }
