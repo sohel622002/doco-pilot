@@ -10,6 +10,9 @@ const NAV_ITEMS = [
   { name: "Dashboard", path: "" },
   { name: "Containers", path: "/containers" },
   { name: "Images", path: "/images" },
+  { name: "Volumes", path: "/volumes" },
+  { name: "Networks", path: "/networks" },
+  { name: "Alerts", path: "/alerts" },
   { name: "Infrastructure", path: "/infrastructure" },
   { name: "Settings", path: "/settings" },
 ];

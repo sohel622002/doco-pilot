@@ -1,104 +1,15 @@
-import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import AgentInstallation from "../components/AgentInstallation";
 import api from "../lib/axios";
-
-function AlertsCard({ serverId }) {
-  const queryClient = useQueryClient();
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [cpuThreshold, setCpuThreshold] = useState(90);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  useEffect(() => {
-    api.get(`/api/servers/${serverId}`).then((res) => {
-      setWebhookUrl(res.data?.server?.alert_webhook_url || "");
-      setCpuThreshold(res.data?.server?.alert_cpu_threshold ?? 90);
-    });
-  }, [serverId]);
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-    setLoading(true);
-    try {
-      await api.patch(`/api/servers/${serverId}`, {
-        alertWebhookUrl: webhookUrl,
-        alertCpuThreshold: Number(cpuThreshold),
-      });
-      setSuccess("Alert settings saved.");
-      queryClient.invalidateQueries({ queryKey: ["servers"] });
-    } catch (err) {
-      setError(err.response?.data?.error || "Failed to save alert settings");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <section className="lg:col-span-3 p-space-md bg-surface border border-outline-variant rounded-lg space-y-space-md">
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-surface-container-high rounded-lg">
-          <span className="material-symbols-outlined text-primary" data-icon="notifications">
-            notifications
-          </span>
-        </div>
-        <div>
-          <h3 className="font-h2 text-h2">Alerts</h3>
-          <p className="text-body-main text-on-surface-variant">
-            POST a JSON payload to this webhook when a container crashes or CPU usage
-            crosses the threshold. Works with Slack/Discord incoming webhooks, n8n,
-            Zapier, or any endpoint that accepts a JSON POST.
-          </p>
-        </div>
-      </div>
-      <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-space-sm items-end">
-        <div className="md:col-span-2 space-y-space-xs">
-          <label className="font-body-main font-semibold block">Webhook URL</label>
-          <input
-            type="url"
-            placeholder="https://hooks.slack.com/services/…"
-            className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-code text-code outline-none focus:ring-1 focus:ring-primary"
-            value={webhookUrl}
-            onChange={(e) => setWebhookUrl(e.target.value)}
-          />
-        </div>
-        <div className="space-y-space-xs">
-          <label className="font-body-main font-semibold block">CPU Alert Threshold (%)</label>
-          <input
-            type="number"
-            min={50}
-            max={99}
-            className="w-full h-10 px-space-sm bg-surface-container-low border border-outline-variant rounded-lg font-body-main outline-none focus:ring-1 focus:ring-primary"
-            value={cpuThreshold}
-            onChange={(e) => setCpuThreshold(e.target.value)}
-          />
-        </div>
-        <div className="md:col-span-3 flex items-center justify-between">
-          <div>
-            {error && <p className="text-error text-body-main">{error}</p>}
-            {success && <p className="text-primary text-body-main">{success}</p>}
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-space-md py-space-xs rounded-full bg-primary text-on-primary font-body-main hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            {loading ? "Saving…" : "Save"}
-          </button>
-        </div>
-      </form>
-    </section>
-  );
-}
+import { useServers } from "../hooks/useServers";
 
 export default function Infrastructure() {
   const { serverId } = useParams();
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState(false);
+  const { data: serversData } = useServers();
+  const selectedServer = serversData?.servers?.find((s) => s.id === serverId);
 
   const handleDeleteServer = async () => {
     if (!window.confirm("Delete this server? The agent will be disconnected and its credentials revoked. This cannot be undone.")) {
@@ -126,7 +37,7 @@ export default function Infrastructure() {
             >
               chevron_right
             </span>
-            <span>DockerNode-01</span>
+            <span>{selectedServer?.name ?? serverId}</span>
           </nav>
           <h2 className="font-h1 text-h1 text-on-surface">
             Server Configuration
@@ -189,108 +100,28 @@ export default function Infrastructure() {
         <div className="lg:col-span-3">
           <AgentInstallation />
         </div>
-        <AlertsCard serverId={serverId} />
-        {/* <!-- Security/Access Tokens Card --> */}
-        <div className="lg:col-span-3 p-space-md bg-surface border border-outline-variant rounded-lg space-y-space-md">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-surface-container-high rounded-lg">
-                <span
-                  className="material-symbols-outlined text-primary"
-                  data-icon="key"
-                >
-                  key
-                </span>
-              </div>
-              <h3 className="font-h2 text-h2">API Access &amp; Security</h3>
+        {/* <!-- Alerts link --> */}
+        <Link
+          to={`/${serverId}/alerts`}
+          className="lg:col-span-3 p-space-md bg-surface border border-outline-variant rounded-lg flex items-center justify-between hover:bg-surface-container-low transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-surface-container-high rounded-lg">
+              <span className="material-symbols-outlined text-primary" data-icon="notifications">
+                notifications
+              </span>
             </div>
-            <button className="px-4 py-2 bg-primary text-on-primary rounded-full font-body-main text-[13px] hover:opacity-90">
-              Create New Token
-            </button>
-          </div>
-          <div className="space-y-0 thin-border rounded-lg overflow-hidden">
-            {/* <!-- Token Row --> */}
-            <div className="flex items-center justify-between p-space-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0">
-              <div className="flex items-center gap-space-md">
-                <div className="flex flex-col">
-                  <span className="font-body-main font-semibold">
-                    Primary Agent Token
-                  </span>
-                  <span className="font-code text-[12px] text-on-surface-variant">
-                    dk_live_9a2b••••••••••••••••3h5i
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-space-lg">
-                <div className="hidden md:flex flex-col items-end">
-                  <span className="font-label-caps text-on-surface-variant">
-                    LAST USED
-                  </span>
-                  <span className="font-body-main text-[13px]">
-                    2 minutes ago
-                  </span>
-                </div>
-                <div className="flex gap-space-sm">
-                  <button className="p-2 hover:text-primary transition-colors">
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      data-icon="visibility"
-                    >
-                      visibility
-                    </span>
-                  </button>
-                  <button className="p-2 hover:text-error transition-colors">
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      data-icon="published_with_changes"
-                    >
-                      published_with_changes
-                    </span>
-                  </button>
-                </div>
-              </div>
-            </div>
-            {/* <!-- Token Row --> */}
-            <div className="flex items-center justify-between p-space-sm hover:bg-surface-container-low transition-colors border-b border-outline-variant last:border-b-0">
-              <div className="flex items-center gap-space-md">
-                <div className="flex flex-col">
-                  <span className="font-body-main font-semibold">
-                    Backup Monitoring
-                  </span>
-                  <span className="font-code text-[12px] text-on-surface-variant">
-                    dk_live_k1l2••••••••••••••••p9r0
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-space-lg">
-                <div className="hidden md:flex flex-col items-end">
-                  <span className="font-label-caps text-on-surface-variant">
-                    LAST USED
-                  </span>
-                  <span className="font-body-main text-[13px]">Never</span>
-                </div>
-                <div className="flex gap-space-sm">
-                  <button className="p-2 hover:text-primary transition-colors">
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      data-icon="visibility"
-                    >
-                      visibility
-                    </span>
-                  </button>
-                  <button className="p-2 hover:text-error transition-colors">
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      data-icon="published_with_changes"
-                    >
-                      published_with_changes
-                    </span>
-                  </button>
-                </div>
-              </div>
+            <div>
+              <h3 className="font-h2 text-h2">Alerts &amp; Monitoring</h3>
+              <p className="text-body-main text-on-surface-variant">
+                Configure alert rules, review alert history, and see 30-day uptime.
+              </p>
             </div>
           </div>
-        </div>
+          <span className="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">
+            chevron_right
+          </span>
+        </Link>
         {/* <!-- Danger Zone --> */}
         <div className="lg:col-span-3 p-space-md bg-surface border border-error rounded-lg space-y-space-sm">
           <div className="flex items-center justify-between">

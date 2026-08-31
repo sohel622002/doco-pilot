@@ -2,6 +2,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Images from "./pages/Images";
 import Containers from "./pages/Containers";
+import Volumes from "./pages/Volumes";
+import Networks from "./pages/Networks";
+import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
 import Infrastructure from "./pages/Infrastructure";
 import Register from "./pages/Register";
@@ -13,7 +16,6 @@ import { WebSocketProvider } from "./context/WebSocketContext";
 import Layout from "./Layout";
 import RootRedirect from "./pages/RootRedirect";
 import Servers from "./pages/Servers";
-import RedesignedHome from "./pages/RedesignedHome";
 
 function App() {
   return (
@@ -28,13 +30,13 @@ function App() {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/" element={<RootRedirect />} />
             <Route path="/servers" element={<Servers />} />
-            
-            {/* <Route  path="/:serverId" element={<RedesignedHome />}>
-              <Route index element={<RedesignedHome />} /> */}
             <Route  path="/:serverId" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="containers" element={<Containers />} />
               <Route path="images" element={<Images />} />
+              <Route path="volumes" element={<Volumes />} />
+              <Route path="networks" element={<Networks />} />
+              <Route path="alerts" element={<Alerts />} />
               <Route path="settings" element={<Settings />} />
               <Route path="infrastructure" element={<Infrastructure />} />
             </Route>

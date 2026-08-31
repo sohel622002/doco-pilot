@@ -1,15 +1,53 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useWebSocket } from "../context/WebSocketContext";
 import { useParams } from "react-router-dom";
 import { WS_ACTIONS } from "../lib/actions";
 import { useContainerStore } from "../store/container";
-import { Box, FileText, Info, Pause, Play, RefreshCw, Square, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  Box,
+  FileText,
+  Info,
+  Pause,
+  Play,
+  RefreshCw,
+  Square,
+  Trash2,
+} from "lucide-react";
 import Spinner from "../components/Spinner";
 import LogsModal from "../components/LogsModal";
 import InspectModal from "../components/InspectModal";
 import DeployContainerModal from "../components/DeployContainerModal";
 import { useLogsStore } from "../store/logs";
 import { useInspectStore } from "../store/inspect";
+
+const STATS_POLL_MS = 5000;
+
+function formatBytes(bytes) {
+  if (!bytes && bytes !== 0) return "-";
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
+}
+
+function SortHeader({ label, sortKey, activeSort, onSort }) {
+  const isActive = activeSort.key === sortKey;
+  const Icon = isActive ? (activeSort.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+  return (
+    <th
+      className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest cursor-pointer select-none"
+      onClick={() => onSort(sortKey)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <Icon size={12} className={isActive ? "text-on-surface" : "opacity-50"} />
+      </span>
+    </th>
+  );
+}
 
 export default function Containers() {
   const { serverId } = useParams();
@@ -25,6 +63,33 @@ export default function Containers() {
   const pausedContainers = useContainerStore(
     (state) => state.containers.filter((c) => c.state === "paused").length,
   );
+  const [sort, setSort] = useState({ key: null, dir: "asc" });
+
+  const handleSort = (key) => {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" },
+    );
+  };
+
+  const sortedContainers = useMemo(() => {
+    if (!sort.key) return containers;
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const getValue = (container) => {
+      switch (sort.key) {
+        case "cpu":
+          return container?.stats?.cpuPercent ?? -1;
+        case "memory":
+          return container?.stats?.memory?.usagePercent ?? -1;
+        case "network":
+          return (container?.stats?.network?.rxBytes ?? 0) + (container?.stats?.network?.txBytes ?? 0);
+        default:
+          return 0;
+      }
+    };
+    return [...containers].sort((a, b) => (getValue(a) - getValue(b)) * dir);
+  }, [containers, sort]);
 
   const handleContrinerAction = (containerAction, containerId, container) => {
     console.log("🚀 ~ handleContrinerAction ~ containerAction:", container);
@@ -61,6 +126,14 @@ export default function Containers() {
     window.addEventListener("containers:refresh", handler);
     return () => window.removeEventListener("containers:refresh", handler);
   }, [serverId]);
+
+  useEffect(() => {
+    if (!isConnected) return;
+    const poll = () => sendMessage({ action: WS_ACTIONS.CONTAINERS_STATS, serverId });
+    poll();
+    const interval = setInterval(poll, STATS_POLL_MS);
+    return () => clearInterval(interval);
+  }, [serverId, isConnected]);
 
   return (
     <div className="">
@@ -120,12 +193,6 @@ export default function Containers() {
                   </p>
                   <p className="font-h1 text-stat text-on-surface">{pausedContainers ?? 0}</p>
                 </div>
-                <div className="flex-1 text-center border-l border-outline-variant">
-                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
-                    RESOURCE UTIL
-                  </p>
-                  <p className="font-h1 text-stat text-on-surface">75%</p>
-                </div>
               </div>
             </div>
             <div className="col-span-12 lg:col-span-4 bg-primary text-on-primary rounded-xl p-space-md relative overflow-hidden">
@@ -154,6 +221,14 @@ export default function Containers() {
                     <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
                       Status
                     </th>
+                    <SortHeader label="CPU %" sortKey="cpu" activeSort={sort} onSort={handleSort} />
+                    <SortHeader label="Memory" sortKey="memory" activeSort={sort} onSort={handleSort} />
+                    <SortHeader
+                      label="Network I/O"
+                      sortKey="network"
+                      activeSort={sort}
+                      onSort={handleSort}
+                    />
                     <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
                       Port Mappings
                     </th>
@@ -163,7 +238,7 @@ export default function Containers() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant">
-                  {containers.map((container) => (
+                  {sortedContainers.map((container) => (
                     <tr
                       className="hover:bg-surface-container-low transition-colors group"
                       key={container.id}
@@ -174,8 +249,28 @@ export default function Containers() {
                             {container?.process ? <Spinner /> : <Box />}
                           </div>
                           <div>
-                            <p className="font-h2 text-[14px] text-on-surface">
+                            <p className="font-h2 text-[14px] text-on-surface flex items-center gap-space-xs">
                               {container?.names[0]}
+                              {container?.healthStatus && (
+                                <span
+                                  title={`Healthcheck: ${container.healthStatus}`}
+                                  className={`w-2 h-2 rounded-full ${
+                                    container.healthStatus === "healthy"
+                                      ? "bg-primary"
+                                      : container.healthStatus === "unhealthy"
+                                        ? "bg-error"
+                                        : "bg-outline"
+                                  }`}
+                                ></span>
+                              )}
+                              {container?.restartCount > 0 && (
+                                <span
+                                  title={`Restarted ${container.restartCount} time(s)`}
+                                  className="inline-flex items-center px-space-xs rounded-full bg-secondary-container text-secondary text-[10px] leading-4"
+                                >
+                                  ↻ {container.restartCount}
+                                </span>
+                              )}
                             </p>
                             <p className="text-label-caps text-on-surface-variant">
                               ID: {container?.shortId}
@@ -216,6 +311,27 @@ export default function Containers() {
                             Paused
                           </span>
                         )}
+                      </td>
+                      <td className="px-space-md py-space-md">
+                        <span className="font-code text-code text-on-surface-variant">
+                          {container?.state === "running" && container?.stats
+                            ? `${container.stats.cpuPercent}%`
+                            : "-"}
+                        </span>
+                      </td>
+                      <td className="px-space-md py-space-md">
+                        <span className="font-code text-code text-on-surface-variant">
+                          {container?.state === "running" && container?.stats
+                            ? `${formatBytes(container.stats.memory.usedBytes)} / ${formatBytes(container.stats.memory.limitBytes)}`
+                            : "-"}
+                        </span>
+                      </td>
+                      <td className="px-space-md py-space-md">
+                        <span className="font-code text-code text-on-surface-variant">
+                          {container?.state === "running" && container?.stats
+                            ? `↓${formatBytes(container.stats.network.rxBytes)} / ↑${formatBytes(container.stats.network.txBytes)}`
+                            : "-"}
+                        </span>
                       </td>
                       <td className="px-space-md py-space-md">
                         <span className="font-code text-code text-on-surface-variant">
@@ -331,19 +447,6 @@ export default function Containers() {
                   ))}
                 </tbody>
               </table>
-            </div>
-            <div className="p-space-md bg-surface-container-low border-t border-outline-variant flex items-center justify-between">
-              <p className="text-label-caps text-on-surface-variant">
-                Showing 4 of 34 containers
-              </p>
-              <div className="flex items-center gap-space-sm">
-                <button className="px-space-sm py-space-xs border border-outline-variant rounded-full text-label-caps hover:bg-surface-container-low transition-colors">
-                  Previous
-                </button>
-                <button className="px-space-sm py-space-xs border border-outline-variant rounded-full text-label-caps hover:bg-surface-container-low transition-colors">
-                  Next
-                </button>
-              </div>
             </div>
           </div>
         </>

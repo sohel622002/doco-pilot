@@ -11,6 +11,10 @@ import {
   validateContainerName,
   validatePortMapping,
   validateEnvVar,
+  validateVolumeName,
+  validateNetworkId,
+  validateNetworkDriver,
+  validateCidrOrIp,
 } from "../utils/audit.js";
 import cookie from 'cookie';
 import { logger } from "../utils/logger.js";
@@ -64,10 +68,21 @@ const ALLOWED_ACTIONS = new Set([
   "containers:logs",
   "containers:remove",
   "containers:create",
+  "containers:stats",
   "system:stats",
   "images:list",
   "images:pull",
   "images:remove",
+  "images:prune",
+  "images:dangling",
+  "system:diskUsage",
+  "volumes:list",
+  "volumes:inspect",
+  "volumes:remove",
+  "networks:list",
+  "networks:inspect",
+  "networks:create",
+  "networks:remove",
 ]);
 
 export function setupWebSocket(server) {
@@ -143,6 +158,8 @@ async function handleAgentConnection(ws, url, req) {
     .update({ agent_connected: true, last_seen_at: new Date().toISOString() })
     .eq("id", server.id);
 
+  await supabase.from("agent_status_events").insert({ server_id: server.id, connected: true });
+
   // Notify user's frontend that their agent is online
   broadcastToUser(server.user_id, {
     type: "agent:online",
@@ -164,6 +181,7 @@ async function handleAgentConnection(ws, url, req) {
     if (!msg.type) return;
 
     checkForAlert(server.id, msg);
+    persistMetricsAndEvents(server.id, msg);
 
     // Forward docker event to the correct user's frontend only
     broadcastToUser(server.user_id, {
@@ -178,6 +196,10 @@ async function handleAgentConnection(ws, url, req) {
       .from("servers")
       .update({ agent_connected: false })
       .eq("id", server.id);
+
+    await supabase
+      .from("agent_status_events")
+      .insert({ server_id: server.id, connected: false });
 
     broadcastToUser(server.user_id, {
       type: "agent:offline",
@@ -273,7 +295,22 @@ async function sendCurrentAgentStatuses(userId, ws) {
 // HANDLE COMMAND: frontend → backend → agent
 // ══════════════════════════════════════════════════════════════
 async function handleClientCommand(user, msg, ws) {
-  const { action, serverId, containerId, imageId, imageName, image, name, ports, env } = msg;
+  const {
+    action,
+    serverId,
+    containerId,
+    imageId,
+    imageName,
+    image,
+    name,
+    ports,
+    env,
+    volumeName,
+    networkId,
+    networkDriver,
+    subnet,
+    gateway,
+  } = msg;
 
   // Rate limit per user
   wsRateLimit(user.id);
@@ -312,6 +349,11 @@ async function handleClientCommand(user, msg, ws) {
   if (name) payload.name = validateContainerName(name);
   if (Array.isArray(ports)) payload.ports = ports.map(validatePortMapping);
   if (Array.isArray(env)) payload.env = env.map(validateEnvVar);
+  if (volumeName) payload.volumeName = validateVolumeName(volumeName);
+  if (networkId) payload.networkId = validateNetworkId(networkId);
+  if (networkDriver) payload.networkDriver = validateNetworkDriver(networkDriver);
+  if (subnet) payload.subnet = validateCidrOrIp(subnet);
+  if (gateway) payload.gateway = validateCidrOrIp(gateway);
 
   // Sign message before forwarding to agent
   agentWs.send(JSON.stringify(payload));
@@ -320,7 +362,7 @@ async function handleClientCommand(user, msg, ws) {
   auditLog({
     req: { user, ip: null },
     action,
-    target: containerId ?? imageId ?? "n/a",
+    target: containerId ?? imageId ?? volumeName ?? networkId ?? "n/a",
     serverId,
   });
 }
@@ -329,11 +371,53 @@ async function handleClientCommand(user, msg, ws) {
 // HELPERS
 // ══════════════════════════════════════════════════════════════
 
+// Persist a fired/resolved row to alert_events — independent of the
+// webhook's own cooldown, so the alert history stays complete even when
+// no webhook is configured.
+async function recordAlertEvent(serverId, ruleType, status, value, threshold) {
+  const { error } = await supabase.from("alert_events").insert({
+    server_id: serverId,
+    rule_type: ruleType,
+    value,
+    threshold,
+    status,
+  });
+  if (error) logger.error({ err: error }, "Failed to insert alert_events row");
+}
+
+// Short-lived cache of each server's alert threshold, so a fast stats poll
+// cadence doesn't turn into a DB read per sample.
+const THRESHOLD_CACHE_MS = 60 * 1000;
+const thresholdCache = new Map(); // serverId → { threshold, fetchedAt }
+
+async function getCpuThreshold(serverId) {
+  const cached = thresholdCache.get(serverId);
+  if (cached && Date.now() - cached.fetchedAt < THRESHOLD_CACHE_MS) {
+    return cached.threshold;
+  }
+
+  const { data: server } = await supabase
+    .from("servers")
+    .select("alert_cpu_threshold")
+    .eq("id", serverId)
+    .single();
+
+  const threshold = server?.alert_cpu_threshold ?? 90;
+  thresholdCache.set(serverId, { threshold, fetchedAt: Date.now() });
+  return threshold;
+}
+
+// Whether high-CPU is currently in a "fired" (unresolved) state per server
+const highCpuActive = new Map(); // serverId → boolean
+
 // Inspect an inbound agent message for alert-worthy conditions
 function checkForAlert(serverId, msg) {
   if (msg.type === "docker:event" && msg.kind === "container" && msg.event === "die") {
     const exitCode = msg.exitCode;
     if (exitCode !== undefined && exitCode !== null && String(exitCode) !== "0") {
+      recordAlertEvent(serverId, "container_crashed", "fired", Number(exitCode), null).catch(
+        (err) => logger.error({ err }, "Failed to record crash alert event"),
+      );
       maybeFireAlert(serverId, "container_crashed", {
         containerName: msg.actorName,
         containerId: msg.actor,
@@ -346,11 +430,79 @@ function checkForAlert(serverId, msg) {
   if (msg.type === "system:stats:result") {
     const cpuPercent = Number(msg.data?.cpu?.usagePercent);
     if (!Number.isNaN(cpuPercent)) {
+      getCpuThreshold(serverId)
+        .then((threshold) => {
+          const wasActive = highCpuActive.get(serverId) || false;
+          const isActive = cpuPercent >= threshold;
+          if (isActive !== wasActive) {
+            highCpuActive.set(serverId, isActive);
+            recordAlertEvent(
+              serverId,
+              "high_cpu_usage",
+              isActive ? "fired" : "resolved",
+              cpuPercent,
+              threshold,
+            ).catch((err) => logger.error({ err }, "Failed to record high-CPU alert event"));
+          }
+        })
+        .catch((err) => logger.error({ err }, "Failed to load CPU threshold"));
+
       maybeFireAlert(serverId, "high_cpu_usage", { cpuPercent }).catch((err) =>
         logger.error({ err }, "Failed to check/fire high-CPU alert"),
       );
     }
   }
+}
+
+// Sample system:stats:result into server_metrics at most once per minute
+// per server, so a fast poll cadence doesn't flood the history table.
+const METRICS_SAMPLE_MS = 60 * 1000;
+const lastMetricSampleAt = new Map(); // serverId → timestamp
+
+function persistMetricsAndEvents(serverId, msg) {
+  if (msg.type === "system:stats:result") {
+    const now = Date.now();
+    const last = lastMetricSampleAt.get(serverId) || 0;
+    if (now - last < METRICS_SAMPLE_MS) return;
+    lastMetricSampleAt.set(serverId, now);
+
+    const data = msg.data ?? {};
+    supabase
+      .from("server_metrics")
+      .insert({
+        server_id: serverId,
+        cpu_pct: numOrNull(data.cpu?.usagePercent),
+        mem_pct: numOrNull(data.memory?.usagePercent),
+        disk_pct: numOrNull(data.disk?.usagePercent),
+        disk_io: data.diskIO ?? null,
+        net_rx: numOrNull(data.network?.rxBytes),
+        net_tx: numOrNull(data.network?.txBytes),
+      })
+      .then(({ error }) => {
+        if (error) logger.error({ err: error }, "Failed to insert server_metrics row");
+      });
+    return;
+  }
+
+  if (msg.type === "docker:event") {
+    supabase
+      .from("docker_events")
+      .insert({
+        server_id: serverId,
+        type: msg.kind ?? "unknown",
+        action: msg.event ?? null,
+        actor_name: msg.actorName ?? null,
+        details: { actor: msg.actor, exitCode: msg.exitCode, status: msg.status },
+      })
+      .then(({ error }) => {
+        if (error) logger.error({ err: error }, "Failed to insert docker_events row");
+      });
+  }
+}
+
+function numOrNull(value) {
+  const n = Number(value);
+  return Number.isNaN(n) ? null : n;
 }
 
 // Broadcast to all open tabs/windows of a user

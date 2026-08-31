@@ -3,6 +3,7 @@ import 'dotenv/config'
 import app from './app.js'
 import { setupWebSocket } from './ws/index.js'
 import { logger } from './utils/logger.js'
+import { startRetentionSchedule } from './utils/retention.js'
 
 const PORT = process.env.PORT || 3001
 
@@ -10,6 +11,9 @@ const server = createServer(app)
 
 // Attach WebSocket to the same HTTP server
 setupWebSocket(server)
+
+// Periodically prune old metrics/events rows
+startRetentionSchedule()
 
 server.listen(PORT, () => {
   logger.info(`Backend running on port ${PORT}`)

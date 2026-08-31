@@ -1,9 +1,52 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useServers } from "../hooks/useServers";
 import api from "../lib/axios";
 import { Plus, Server as ServerIcon, Trash2, Copy } from "lucide-react";
+
+const HEALTH_META = {
+  ok: { label: "OK", dot: "bg-primary", text: "text-primary" },
+  warning: { label: "Warning", dot: "bg-amber-500", text: "text-amber-500" },
+  critical: { label: "Critical", dot: "bg-error", text: "text-error" },
+  unknown: { label: "Unknown", dot: "bg-outline", text: "text-on-surface-variant" },
+};
+
+// Worst-first — used both for the filter dropdown order and the default sort.
+const HEALTH_RANK = { critical: 0, warning: 1, unknown: 2, ok: 3 };
+
+function computeHealth(server, latestMetric) {
+  if (!server.agent_connected) return "critical";
+  if (!latestMetric) return "unknown";
+
+  const threshold = server.alert_cpu_threshold ?? 90;
+  const cpu = Number(latestMetric.cpu_pct ?? 0);
+  const mem = Number(latestMetric.mem_pct ?? 0);
+  const disk = Number(latestMetric.disk_pct ?? 0);
+
+  if (cpu >= threshold || mem >= 90 || disk >= 90) return "critical";
+  if (cpu >= threshold * 0.8 || mem >= 75 || disk >= 75) return "warning";
+  return "ok";
+}
+
+function Sparkline({ samples, dataKey, color }) {
+  if (!samples || samples.length < 2) {
+    return <div className="h-8 flex items-center text-[10px] text-on-surface-variant">No data yet</div>;
+  }
+  const points = samples.map((s) => Math.max(0, Math.min(100, Number(s[dataKey]) || 0)));
+  const width = 100;
+  const height = 32;
+  const step = width / (points.length - 1);
+  const path = points
+    .map((p, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${(height - (p / 100) * height).toFixed(1)}`)
+    .join(" ");
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-8" preserveAspectRatio="none">
+      <path d={path} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
 
 function AddServerForm({ onCreated }) {
   const [name, setName] = useState("");
@@ -70,8 +113,37 @@ export default function Servers() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [newServer, setNewServer] = useState(null);
+  const [healthFilter, setHealthFilter] = useState("all");
 
-  const servers = data?.servers || [];
+  const servers = useMemo(() => data?.servers || [], [data]);
+
+  const metricsQueries = useQueries({
+    queries: servers.map((server) => ({
+      queryKey: ["metrics", server.id, "1h"],
+      queryFn: async () =>
+        (await api.get(`/api/servers/${server.id}/metrics`, { params: { range: "1h" } })).data,
+      enabled: !!server.id,
+      refetchInterval: 30000,
+    })),
+  });
+
+  const serversWithHealth = useMemo(
+    () =>
+      servers.map((server, i) => {
+        const samples = metricsQueries[i]?.data?.metrics ?? [];
+        const latest = samples[samples.length - 1] ?? null;
+        return { server, samples, health: computeHealth(server, latest) };
+      }),
+    [servers, metricsQueries],
+  );
+
+  const visibleServers = useMemo(() => {
+    const filtered =
+      healthFilter === "all"
+        ? serversWithHealth
+        : serversWithHealth.filter((s) => s.health === healthFilter);
+    return [...filtered].sort((a, b) => HEALTH_RANK[a.health] - HEALTH_RANK[b.health]);
+  }, [serversWithHealth, healthFilter]);
 
   const handleCreated = (created) => {
     setNewServer(created);
@@ -86,11 +158,32 @@ export default function Servers() {
 
   return (
     <div className="max-w-container-max mx-auto p-space-md">
-      <div className="mb-space-lg">
-        <h1 className="font-h1 text-h1 text-on-background mb-space-xs">Your Servers</h1>
-        <p className="text-body-large text-on-surface-variant">
-          All servers registered to your account.
-        </p>
+      <div className="mb-space-lg flex flex-col md:flex-row md:items-end md:justify-between gap-space-sm">
+        <div>
+          <h1 className="font-h1 text-h1 text-on-background mb-space-xs">Your Servers</h1>
+          <p className="text-body-large text-on-surface-variant">
+            All servers registered to your account.
+          </p>
+        </div>
+        {servers.length > 1 && (
+          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-full">
+            <span className="text-label-caps uppercase tracking-wider text-on-surface-variant">
+              Health:
+            </span>
+            <select
+              className="bg-transparent text-label-caps outline-none"
+              value={healthFilter}
+              onChange={(e) => setHealthFilter(e.target.value)}
+            >
+              <option value="all">All</option>
+              {Object.keys(HEALTH_RANK).map((key) => (
+                <option key={key} value={key}>
+                  {HEALTH_META[key].label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <AddServerForm onCreated={handleCreated} />
@@ -116,9 +209,11 @@ export default function Servers() {
         <p className="text-on-surface-variant">
           No servers yet — add one above to get started.
         </p>
+      ) : visibleServers.length === 0 ? (
+        <p className="text-on-surface-variant">No servers match this health filter.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-md">
-          {servers.map((server) => (
+          {visibleServers.map(({ server, samples, health }) => (
             <div
               key={server.id}
               className="bg-surface-container-low border border-outline-variant rounded-xl p-space-md flex flex-col gap-space-sm hover:border-primary transition-colors cursor-pointer"
@@ -136,17 +231,38 @@ export default function Servers() {
                     </p>
                   </div>
                 </div>
-                <button
-                  title="Delete server"
-                  className="p-1 text-on-surface-variant hover:text-error transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete(server.id);
-                  }}
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex items-center gap-space-xs">
+                  <span
+                    title={`Health: ${HEALTH_META[health].label}`}
+                    className={`flex items-center gap-1 px-space-xs py-0.5 rounded-full text-[10px] font-label-caps uppercase ${HEALTH_META[health].text}`}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${HEALTH_META[health].dot}`}></span>
+                    {HEALTH_META[health].label}
+                  </span>
+                  <button
+                    title="Delete server"
+                    className="p-1 text-on-surface-variant hover:text-error transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(server.id);
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
+
+              <div className="flex items-center gap-space-md">
+                <div className="flex-1">
+                  <Sparkline samples={samples} dataKey="cpu_pct" color="var(--color-primary)" />
+                  <span className="text-[10px] text-on-surface-variant">CPU (1h)</span>
+                </div>
+                <div className="flex-1">
+                  <Sparkline samples={samples} dataKey="mem_pct" color="var(--color-secondary)" />
+                  <span className="text-[10px] text-on-surface-variant">Memory (1h)</span>
+                </div>
+              </div>
+
               <div className="flex items-center gap-space-xs">
                 <span
                   className={`w-1.5 h-1.5 rounded-full ${

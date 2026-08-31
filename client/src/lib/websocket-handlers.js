@@ -3,6 +3,9 @@ import { useSystemStore } from "../store/system";
 import { useImageStore } from "../store/image";
 import { useLogsStore } from "../store/logs";
 import { useInspectStore } from "../store/inspect";
+import { useDiskUsageStore } from "../store/diskUsage";
+import { useVolumeStore } from "../store/volume";
+import { useNetworkStore } from "../store/network";
 import { WS_ACTIONS } from "./actions";
 
 const handleDockerEvent = (message) => {
@@ -82,6 +85,33 @@ export const handleSocketMessages = (rawData) => {
           break;
         case WS_ACTIONS.CONTAINER_INSPECT_RESULT:
           useInspectStore.getState().setData(message?.data);
+          break;
+        case WS_ACTIONS.NETWORKS_LIST_RESULT:
+          useNetworkStore.getState().setNetworks(message?.data);
+          break;
+        case WS_ACTIONS.NETWORKS_REMOVE_RESULT:
+          useNetworkStore.getState().removeNetwork(message?.data?.id);
+          break;
+        case WS_ACTIONS.NETWORKS_CREATE_RESULT:
+          window.dispatchEvent(new CustomEvent("networks:created"));
+          break;
+        case WS_ACTIONS.VOLUMES_LIST_RESULT:
+          useVolumeStore.getState().setVolumes(message?.data);
+          break;
+        case WS_ACTIONS.VOLUMES_REMOVE_RESULT:
+          useVolumeStore.getState().removeVolume(message?.data?.name);
+          break;
+        case WS_ACTIONS.SYSTEM_DISK_USAGE_RESULT:
+          useDiskUsageStore.getState().setDiskUsage(message?.data);
+          break;
+        case WS_ACTIONS.IMAGES_DANGLING_RESULT:
+          useDiskUsageStore.getState().setDanglingImages(message?.data);
+          break;
+        case WS_ACTIONS.IMAGES_PRUNE_RESULT:
+          window.dispatchEvent(new CustomEvent("images:pruned", { detail: message?.data }));
+          break;
+        case WS_ACTIONS.CONTAINERS_STATS_RESULT:
+          useContainerStore.getState().setStats(message?.data);
           break;
         case WS_ACTIONS.CONTAINER_CREATE_RESULT:
           // No serverId carried on the client message we sent; the agent

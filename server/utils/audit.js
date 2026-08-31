@@ -61,12 +61,44 @@ export function validateContainerName(name) {
   return name
 }
 
+// Validate a user-supplied volume name (Docker's own naming rules)
+export function validateVolumeName(name) {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,254}$/.test(name)) {
+    throw new Error('Invalid volume name format')
+  }
+  return name
+}
+
 // Validate a "hostPort:containerPort[/proto]" mapping
 export function validatePortMapping(mapping) {
   if (!/^\d{1,5}:\d{1,5}(\/(tcp|udp))?$/.test(mapping)) {
     throw new Error(`Invalid port mapping: ${mapping}`)
   }
   return mapping
+}
+
+// Validate a Docker network ID (hex) or name
+export function validateNetworkId(id) {
+  if (!id || !/^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,254}$/.test(id)) {
+    throw new Error('Invalid network ID format')
+  }
+  return id
+}
+
+// Validate a network driver name (bridge, overlay, macvlan, ...)
+export function validateNetworkDriver(driver) {
+  if (!/^[a-zA-Z][a-zA-Z0-9_-]{0,31}$/.test(driver)) {
+    throw new Error('Invalid network driver format')
+  }
+  return driver
+}
+
+// Validate an IPv4/IPv6 CIDR (subnet or gateway address)
+export function validateCidrOrIp(value) {
+  if (!/^[0-9a-fA-F:.]{2,43}(\/\d{1,3})?$/.test(value)) {
+    throw new Error('Invalid subnet/gateway format')
+  }
+  return value
 }
 
 // Validate a "KEY=VALUE" environment variable entry

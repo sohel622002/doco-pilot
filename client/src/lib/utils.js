@@ -5,6 +5,17 @@ export function formatBytes(bytes) {
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
 
+export function formatUptime(totalSeconds) {
+  if (!totalSeconds && totalSeconds !== 0) return "-";
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
+}
+
 export function timeAgo(dateString) {
   const now = new Date();
   const past = new Date(dateString);
