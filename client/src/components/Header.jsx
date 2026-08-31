@@ -2,14 +2,6 @@ import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { Plus, UserRound } from "lucide-react";
 
-const NAV_ITEMS = [
-  { name: "Dashboard", icon: "dashboard", path: "" },
-  { name: "Containers", icon: "view_quilt", path: "/containers" },
-  { name: "Images", icon: "layers", path: "/images" },
-  { name: "Infrastructure", icon: "account_tree", path: "/infrastructure" },
-  { name: "Settings", icon: "settings", path: "/settings" },
-];
-
 export default function Header({ servers, selectedServer }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);

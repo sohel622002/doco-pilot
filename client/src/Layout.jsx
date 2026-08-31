@@ -4,7 +4,7 @@ import { useServers } from "./hooks/useServers";
 import { useEffect } from "react";
 import { useSystemStore } from "./store/system";
 import NodConnectionError from "./components/NodConnectionError";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 
 const NAV_ITEMS = [
   { name: "Dashboard", path: "" },

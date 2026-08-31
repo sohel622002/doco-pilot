@@ -1,5 +1,5 @@
 import AgentInstallation from "./AgentInstallation";
-import { Info, RefreshCw, WifiOff } from "lucide-react";
+import { Info, RefreshCw } from "lucide-react";
 import { useSystemStore } from "../store/system";
 
 export default function NodConnectionError() {

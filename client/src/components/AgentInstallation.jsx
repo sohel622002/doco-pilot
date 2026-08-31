@@ -1,4 +1,4 @@
-import { Copy, SquareTerminalIcon } from "lucide-react";
+import { Copy } from "lucide-react";
 import { useSystemStore } from "../store/system";
 
 export default function AgentInstallation() {
