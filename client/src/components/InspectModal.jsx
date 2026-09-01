@@ -4,8 +4,8 @@ import Spinner from "./Spinner";
 
 function Row({ label, value }) {
   return (
-    <div className="py-space-xs border-b border-outline-variant/30 last:border-b-0">
-      <p className="text-label-caps text-on-surface-variant uppercase tracking-wider mb-1">
+    <div className="py-space-sm border-b border-outline-variant last:border-b-0">
+      <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-1">
         {label}
       </p>
       <p className="font-code text-code text-on-surface break-all whitespace-pre-wrap">
@@ -25,13 +25,13 @@ export default function InspectModal() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-space-md">
-      <div className="w-full max-w-2xl max-h-[80vh] bg-surface border border-outline-variant rounded-xl flex flex-col overflow-hidden">
+      <div className="w-full max-w-2xl max-h-[80vh] bg-card border border-outline-variant rounded-lg flex flex-col overflow-hidden">
         <div className="flex items-center justify-between px-space-md py-space-sm border-b border-outline-variant">
           <h3 className="font-h2 text-h2 text-on-surface">
             Inspect — {containerId}
           </h3>
           <button
-            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"
+            className="p-1.5 hover:bg-surface-container-high rounded-md text-on-surface-variant transition-colors"
             onClick={close}
           >
             <X size={18} />

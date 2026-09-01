@@ -7,27 +7,47 @@ const api = axios.create({
   withCredentials: true,
 });
 
+let refreshPromise = null;
+
+function redirectToLogin() {
+  window.location.href = "/login";
+}
+
 api.interceptors.response.use(
   (response) => response,
 
   async (error) => {
     const originalRequest = error.config;
+    const status = error.response?.status;
 
-    // Prevent infinite loop
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        await api.post("/api/auth/refresh");
-        return api(originalRequest);
-      } catch (refreshError) {
-        localStorage.removeItem("access_token");
-        window.location.href = "/login";
-        return Promise.reject(refreshError);
-      }
+    if (status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error);
+    // Never chain refresh attempts off the refresh endpoint itself — each
+    // api.post() gets a fresh config, so _retry alone cannot stop a loop.
+    if (originalRequest.url?.includes("/api/auth/refresh")) {
+      redirectToLogin();
+      return Promise.reject(error);
+    }
+
+    originalRequest._retry = true;
+
+    if (!refreshPromise) {
+      refreshPromise = api
+        .post("/api/auth/refresh")
+        .finally(() => {
+          refreshPromise = null;
+        });
+    }
+
+    try {
+      await refreshPromise;
+      return api(originalRequest);
+    } catch (refreshError) {
+      redirectToLogin();
+      return Promise.reject(refreshError);
+    }
   },
 );
 

@@ -1,11 +1,14 @@
 import rateLimit from 'express-rate-limit'
 
-// General API rate limit
+const isDev = process.env.NODE_ENV !== 'production'
+
+// General API rate limit (disabled in local dev — HMR + auth retries burn the budget fast)
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
   message: { error: 'Too many requests, please try again later' }
 })
 

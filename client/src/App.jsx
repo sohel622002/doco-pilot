@@ -2,8 +2,11 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Images from "./pages/Images";
 import Containers from "./pages/Containers";
+import Volumes from "./pages/Volumes";
+import Networks from "./pages/Networks";
+import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
-import Infrastructure from "./pages/Infrastructure";
+import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -27,13 +30,15 @@ function App() {
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/" element={<RootRedirect />} />
             <Route path="/servers" element={<Servers />} />
-            
             <Route  path="/:serverId" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="containers" element={<Containers />} />
               <Route path="images" element={<Images />} />
+              <Route path="volumes" element={<Volumes />} />
+              <Route path="networks" element={<Networks />} />
+              <Route path="alerts" element={<Alerts />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="infrastructure" element={<Infrastructure />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
             {/* Fallback for 404 pages */}
             <Route path="*" element={<h2>Not Found!</h2>} />

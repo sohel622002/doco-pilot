@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
+import { Eye, EyeOff } from "lucide-react";
 import { googleAuthErrorMessage, startGoogleAuth } from "../lib/googleAuth";
 
 const loginSchema = z.object({
@@ -16,6 +17,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -63,11 +65,11 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <div className="flex-1 flex flex-col items-center justify-center p-space-md">
-        <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm">
+        <div className="bg-card border border-outline-variant rounded-lg p-8">
           <div className="mb-8">
-            <h2 className="text-h2 text-on-surface mb-2">Welcome back</h2>
+            <h2 className="text-h2 font-h2 text-on-surface mb-2">Welcome back</h2>
             <p className="text-body-main text-on-surface-variant">
               Log in to manage your containers and infrastructure.
             </p>
@@ -75,13 +77,13 @@ export default function Login() {
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <label
-                className="text-label-caps text-on-surface-variant uppercase"
+                className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider"
                 htmlFor="email"
               >
                 Email Address
               </label>
               <input
-                className="w-full h-11 px-4 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none text-body-main"
+                className="w-full h-11 px-4 rounded-md border border-outline-variant bg-surface-container text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-outline transition-colors text-body-main"
                 id="email"
                 placeholder="name@company.com"
                 type="email"
@@ -94,7 +96,7 @@ export default function Login() {
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <label
-                  className="text-label-caps text-on-surface-variant uppercase"
+                  className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider"
                   htmlFor="password"
                 >
                   Password
@@ -108,18 +110,18 @@ export default function Login() {
               </div>
               <div className="relative">
                 <input
-                  className="w-full h-11 px-4 pr-10 rounded-lg border border-outline-variant bg-surface-container-low text-on-surface placeholder:text-outline focus:ring-1 focus:ring-primary focus:border-primary transition-all outline-none text-body-main"
+                  className="w-full h-11 px-4 pr-11 rounded-md border border-outline-variant bg-surface-container text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-outline transition-colors text-body-main"
                   id="password"
                   placeholder="••••••••"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   {...register("password")}
                 />
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant"
-                  data-icon="visibility"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
                   type="button"
+                  onClick={() => setShowPassword((v) => !v)}
                 >
-                  <span className="material-symbols-outlined">visibility</span>
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
               {errors.password && (
@@ -129,7 +131,7 @@ export default function Login() {
             {error && <p className="text-error text-body-main">{error}</p>}
             <button
               disabled={loading}
-              className="w-full h-11 bg-primary text-on-primary font-medium rounded-lg hover:bg-primary-container transition-colors shadow-sm mt-2"
+              className="w-full h-11 bg-primary text-on-primary font-medium rounded-md hover:opacity-90 transition-opacity mt-2 disabled:opacity-50"
               type="submit"
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -138,7 +140,7 @@ export default function Login() {
           <div className="mt-6 flex flex-col items-center gap-4">
             <div className="flex items-center gap-4 w-full">
               <div className="h-px bg-outline-variant flex-1"></div>
-              <span className="text-label-caps text-outline uppercase">
+              <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
                 Or continue with
               </span>
               <div className="h-px bg-outline-variant flex-1"></div>
@@ -147,7 +149,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={startGoogleAuth}
-                className="flex items-center justify-center gap-2 w-full h-10 border border-outline-variant rounded-lg bg-surface hover:bg-surface-container transition-colors"
+                className="flex items-center justify-center gap-2 w-full h-10 border border-outline-variant rounded-md hover:bg-surface-container transition-colors"
               >
                 <img
                   alt="Google"
@@ -172,19 +174,19 @@ export default function Login() {
         </div>
         <div className="mt-space-lg flex gap-space-md">
           <a
-            className="text-label-caps text-outline hover:text-on-surface-variant"
+            className="text-label-caps text-on-surface-variant hover:text-on-surface transition-colors"
             href="#"
           >
             Terms of Service
           </a>
           <a
-            className="text-label-caps text-outline hover:text-on-surface-variant"
+            className="text-label-caps text-on-surface-variant hover:text-on-surface transition-colors"
             href="#"
           >
             Privacy Policy
           </a>
           <a
-            className="text-label-caps text-outline hover:text-on-surface-variant"
+            className="text-label-caps text-on-surface-variant hover:text-on-surface transition-colors"
             href="#"
           >
             Contact Support
@@ -192,7 +194,7 @@ export default function Login() {
         </div>
       </div>
       <footer className="p-space-md text-center">
-        <p className="text-label-caps text-outline">
+        <p className="text-label-caps text-on-surface-variant">
           © 2024 DockerDesk Inc. All rights reserved.
         </p>
       </footer>

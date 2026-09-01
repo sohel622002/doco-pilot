@@ -1,5 +1,5 @@
 -- Google OAuth support for profiles
--- Run in the Supabase SQL editor (or any Postgres client connected to your DB).
+
 alter table public.profiles
 alter column password_hash drop not null;
 

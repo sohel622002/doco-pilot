@@ -1,8 +1,41 @@
+const STATUS_DOT = {
+  operational: "bg-[#5fd696]",
+  degraded: "bg-[#e8b458]",
+  critical: "bg-error",
+};
+
+export function computeServerStatus(systemData, selectedServer) {
+  const isOnline = systemData?.agentState === "online";
+  const cpuPercent = Number(systemData?.cpu?.usagePercent ?? 0);
+  const memPercent = Number(systemData?.memory?.usagePercent ?? 0);
+  const diskPercent = Number(systemData?.disk?.usagePercent ?? 0);
+  const cpuThreshold = selectedServer?.alert_cpu_threshold ?? 90;
+
+  const status = !isOnline
+    ? "critical"
+    : cpuPercent >= cpuThreshold || memPercent >= 90 || diskPercent >= 90
+      ? "degraded"
+      : "operational";
+
+  return { status, dot: STATUS_DOT[status] };
+}
+
 export function formatBytes(bytes) {
   const sizes = ["Bytes", "KB", "MB", "GB"];
   if (bytes === 0) return "0 Byte";
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+}
+
+export function formatUptime(totalSeconds) {
+  if (!totalSeconds && totalSeconds !== 0) return "-";
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
 export function timeAgo(dateString) {

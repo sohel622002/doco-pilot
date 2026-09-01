@@ -9,5 +9,7 @@ export function useServers() {
       return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: (failureCount, error) =>
+      error?.response?.status !== 429 && failureCount < 3,
   });
 }

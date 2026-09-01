@@ -15,16 +15,88 @@ export async function pingDocker() {
 
 export async function listContainers() {
   const containers = await docker.listContainers({ all: true });
-  return containers.map((c) => ({
-    id: c.Id,
-    shortId: c.Id.slice(0, 12),
-    names: c.Names.map((n) => n.replace(/^\//, "")),
-    image: c.Image,
-    status: c.Status,
-    state: c.State, // 'running' | 'exited' | 'paused' etc.
-    ports: c.Ports,
-    created: c.Created,
-  }));
+  return Promise.all(
+    containers.map(async (c) => {
+      let restartCount = 0;
+      let healthStatus = null;
+      try {
+        const info = await docker.getContainer(c.Id).inspect();
+        restartCount = info.RestartCount ?? 0;
+        healthStatus = info.State?.Health?.Status ?? null;
+      } catch {
+        // container may have been removed between list and inspect; ignore
+      }
+      return {
+        id: c.Id,
+        shortId: c.Id.slice(0, 12),
+        names: c.Names.map((n) => n.replace(/^\//, "")),
+        image: c.Image,
+        status: c.Status,
+        state: c.State, // 'running' | 'exited' | 'paused' etc.
+        ports: c.Ports,
+        created: c.Created,
+        restartCount,
+        healthStatus,
+      };
+    }),
+  );
+}
+
+// Compute CPU % the same way `docker stats` does
+function calcCpuPercent(stats) {
+  const cpuDelta = stats.cpu_stats.cpu_usage.total_usage - stats.precpu_stats.cpu_usage.total_usage;
+  const systemDelta = stats.cpu_stats.system_cpu_usage - stats.precpu_stats.system_cpu_usage;
+  const onlineCpus =
+    stats.cpu_stats.online_cpus || stats.cpu_stats.cpu_usage.percpu_usage?.length || 1;
+  if (systemDelta > 0 && cpuDelta > 0) {
+    return (cpuDelta / systemDelta) * onlineCpus * 100;
+  }
+  return 0;
+}
+
+function formatContainerStats(id, stats) {
+  const memUsed = stats.memory_stats.usage ?? 0;
+  const memLimit = stats.memory_stats.limit ?? 0;
+  const networks = stats.networks ?? {};
+  const { rx, tx } = Object.values(networks).reduce(
+    (acc, n) => ({ rx: acc.rx + (n.rx_bytes ?? 0), tx: acc.tx + (n.tx_bytes ?? 0) }),
+    { rx: 0, tx: 0 },
+  );
+
+  return {
+    id,
+    shortId: id.slice(0, 12),
+    cpuPercent: Number(calcCpuPercent(stats).toFixed(1)),
+    memory: {
+      usedBytes: memUsed,
+      limitBytes: memLimit,
+      usagePercent: memLimit > 0 ? Number(((memUsed / memLimit) * 100).toFixed(1)) : 0,
+    },
+    network: {
+      rxBytes: rx,
+      txBytes: tx,
+    },
+  };
+}
+
+export async function getContainerStats(containerId) {
+  const container = docker.getContainer(containerId);
+  const stats = await container.stats({ stream: false });
+  return formatContainerStats(containerId, stats);
+}
+
+export async function getAllContainerStats() {
+  const containers = await docker.listContainers({ all: false }); // only running containers have stats
+  const results = await Promise.all(
+    containers.map(async (c) => {
+      try {
+        return await getContainerStats(c.Id);
+      } catch {
+        return null;
+      }
+    }),
+  );
+  return results.filter(Boolean);
 }
 
 export async function inspectContainer(containerId) {
@@ -155,6 +227,176 @@ export async function removeImage(imageId) {
   const image = docker.getImage(imageId);
   await image.remove({ force: true });
   return { ok: true, action: "remove", imageId };
+}
+
+export async function getDanglingImages() {
+  const images = await docker.listImages({ filters: { dangling: ["true"] } });
+  return images.map((img) => ({
+    id: img.Id.replace("sha256:", "").slice(0, 12),
+    fullId: img.Id,
+    size: img.Size,
+    created: new Date(img.Created * 1000).toISOString(),
+  }));
+}
+
+export async function pruneImages() {
+  const result = await docker.pruneImages({ filters: { dangling: { true: true } } });
+  return {
+    ok: true,
+    action: "prune",
+    imagesDeleted: result.ImagesDeleted?.length ?? 0,
+    spaceReclaimed: result.SpaceReclaimed ?? 0,
+  };
+}
+
+// ── Disk usage ───────────────────────────────────────────────
+
+export async function getDiskUsage() {
+  const data = await docker.df();
+
+  const imagesSize = data.Images?.reduce((sum, i) => sum + (i.Size ?? 0), 0) ?? 0;
+  const imagesReclaimable =
+    data.Images?.reduce((sum, i) => sum + (i.Containers === 0 ? (i.Size ?? 0) : 0), 0) ?? 0;
+
+  const containersSize = data.Containers?.reduce((sum, c) => sum + (c.SizeRw ?? 0), 0) ?? 0;
+  const containersReclaimable =
+    data.Containers?.reduce(
+      (sum, c) => sum + (c.State !== "running" ? (c.SizeRw ?? 0) : 0),
+      0,
+    ) ?? 0;
+
+  const volumesSize = data.Volumes?.reduce((sum, v) => sum + (v.UsageData?.Size ?? 0), 0) ?? 0;
+  const volumesReclaimable =
+    data.Volumes?.reduce(
+      (sum, v) => sum + ((v.UsageData?.RefCount ?? 0) === 0 ? (v.UsageData?.Size ?? 0) : 0),
+      0,
+    ) ?? 0;
+
+  const buildCacheSize = data.BuildCache?.reduce((sum, b) => sum + (b.Size ?? 0), 0) ?? 0;
+  const buildCacheReclaimable =
+    data.BuildCache?.reduce((sum, b) => sum + (b.InUse ? 0 : (b.Size ?? 0)), 0) ?? 0;
+
+  return {
+    images: {
+      count: data.Images?.length ?? 0,
+      totalBytes: imagesSize,
+      reclaimableBytes: imagesReclaimable,
+    },
+    containers: {
+      count: data.Containers?.length ?? 0,
+      totalBytes: containersSize,
+      reclaimableBytes: containersReclaimable,
+    },
+    volumes: {
+      count: data.Volumes?.length ?? 0,
+      totalBytes: volumesSize,
+      reclaimableBytes: volumesReclaimable,
+    },
+    buildCache: {
+      count: data.BuildCache?.length ?? 0,
+      totalBytes: buildCacheSize,
+      reclaimableBytes: buildCacheReclaimable,
+    },
+    totalBytes: imagesSize + containersSize + volumesSize + buildCacheSize,
+    reclaimableBytes:
+      imagesReclaimable + containersReclaimable + volumesReclaimable + buildCacheReclaimable,
+  };
+}
+
+// ── Volumes ──────────────────────────────────────────────────
+
+export async function listVolumes() {
+  const [{ Volumes: volumes }, containers] = await Promise.all([
+    docker.listVolumes(),
+    docker.listContainers({ all: true }),
+  ]);
+
+  const usageByVolume = new Map();
+  for (const c of containers) {
+    for (const mount of c.Mounts ?? []) {
+      if (mount.Type !== "volume" || !mount.Name) continue;
+      const names = usageByVolume.get(mount.Name) ?? [];
+      names.push(c.Names?.[0]?.replace(/^\//, "") ?? c.Id.slice(0, 12));
+      usageByVolume.set(mount.Name, names);
+    }
+  }
+
+  return (volumes ?? []).map((v) => {
+    const usedBy = usageByVolume.get(v.Name) ?? [];
+    return {
+      name: v.Name,
+      driver: v.Driver,
+      mountpoint: v.Mountpoint,
+      created: v.CreatedAt,
+      labels: v.Labels ?? {},
+      usedBy,
+      orphaned: usedBy.length === 0,
+    };
+  });
+}
+
+export async function inspectVolume(name) {
+  const volume = docker.getVolume(name);
+  return await volume.inspect();
+}
+
+export async function removeVolume(name) {
+  const volume = docker.getVolume(name);
+  await volume.remove({ force: true });
+  return { ok: true, action: "remove", name };
+}
+
+// ── Networks ─────────────────────────────────────────────────
+
+export async function listNetworks() {
+  const networks = await docker.listNetworks();
+  return networks.map((n) => {
+    const config = n.IPAM?.Config?.[0] ?? {};
+    return {
+      id: n.Id.slice(0, 12),
+      fullId: n.Id,
+      name: n.Name,
+      driver: n.Driver,
+      scope: n.Scope,
+      subnet: config.Subnet ?? null,
+      gateway: config.Gateway ?? null,
+      internal: !!n.Internal,
+      attachable: !!n.Attachable,
+      connectedContainers: Object.values(n.Containers ?? {}).map((c) => c.Name),
+      created: n.Created,
+    };
+  });
+}
+
+export async function inspectNetwork(id) {
+  const network = docker.getNetwork(id);
+  return await network.inspect();
+}
+
+// opts: { name, driver, subnet, gateway, internal, attachable }
+export async function createNetwork(opts) {
+  const { name, driver = "bridge", subnet, gateway, internal = false, attachable = true } = opts;
+
+  const IPAM =
+    subnet || gateway
+      ? { Config: [{ Subnet: subnet, Gateway: gateway }] }
+      : undefined;
+
+  const network = await docker.createNetwork({
+    Name: name,
+    Driver: driver,
+    Internal: internal,
+    Attachable: attachable,
+    IPAM,
+  });
+
+  return { ok: true, action: "create", id: network.id, name };
+}
+
+export async function removeNetwork(id) {
+  const network = docker.getNetwork(id);
+  await network.remove();
+  return { ok: true, action: "remove", id };
 }
 
 // ── Real-time Docker events (streamed to backend) ────────────
