@@ -3,63 +3,80 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-on-primary-fixed: #0c006b;
-  --color-surface-dim: #dbd8e4;
-  --color-secondary-fixed: #e2e3e1;
-  --color-surface: #fcf8ff;
-  --color-error: #ba1a1a;
-  --color-inverse-on-surface: #f2effb;
-  --color-outline: #777586;
-  --color-inverse-primary: #c2c1ff;
-  --color-surface-container-high: #eae6f2;
-  --color-tertiary-container: #ae5600;
-  --color-surface-container-low: #f5f2fe;
-  --color-background: #fcf8ff;
-  --color-on-primary-container: #f4f1ff;
-  --color-on-background: #1b1b23;
-  --color-tertiary-fixed: #ffdcc6;
-  --color-secondary-container: #e2e3e1;
-  --color-outline-variant: #c7c4d7;
-  --color-on-secondary: #ffffff;
-  --color-on-primary-fixed-variant: #332dbc;
-  --color-primary-container: #5e5ce6;
-  --color-on-secondary-container: #636563;
-  --color-surface-container: #f0ecf8;
-  --color-primary: #0c6e9978;
-  --color-on-tertiary-fixed: #311300;
-  --color-surface-tint: #4d4ad5;
-  --color-on-surface-variant: #464554;
-  --color-on-secondary-fixed: #1a1c1b;
-  --color-on-primary: #ffffff;
-  --color-on-error: #ffffff;
-  --color-secondary: #5d5f5d;
-  --color-surface-container-lowest: #ffffff;
-  --color-on-tertiary: #ffffff;
-  --color-inverse-surface: #302f38;
-  --color-on-tertiary-container: #ffefe7;
-  --color-surface-container-highest: #e4e1ed;
-  --color-on-surface: #1b1b23;
-  --color-error-container: #ffdad6;
-  --color-secondary-fixed-dim: #c6c7c5;
-  --color-surface-variant: #e4e1ed;
-  --color-surface-bright: #fcf8ff;
-  --color-primary-fixed: #e2dfff;
-  --color-tertiary-fixed-dim: #ffb786;
-  --color-tertiary: #894200;
-  --color-primary-fixed-dim: #c2c1ff;
-  --color-on-secondary-fixed-variant: #454746;
-  --color-on-tertiary-fixed-variant: #723600;
-  --color-on-error-container: #93000a;
+  /* Neutral ramp — near-monochrome, low contrast between steps.
+     See DESIGN_SYSTEM.md: quiet, engineered-instrument tone. */
+  --color-background: #0a0a0d;
+  --color-surface: #0a0a0d;
+  --color-surface-dim: #08080a;
+  --color-surface-bright: #1c1c20;
+  --color-surface-container-lowest: #08080a;
+  --color-surface-container-low: #101013;
+  --color-surface-container: #141417;
+  --color-surface-container-high: #1c1c20;
+  --color-surface-container-highest: #232327;
+  --color-surface-variant: #1c1c20;
+  --color-card: #141417;
 
-  --radius-DEFAULT: 0.5rem;
+  --color-outline: #35353b;
+  --color-outline-variant: #232327;
+
+  --color-on-background: #f2f2f4;
+  --color-on-surface: #f2f2f4;
+  --color-on-surface-variant: #8a8a92;
+
+  /* Single functional accent — used for primary actions, active nav,
+     and the one "hero" data series. Never more than one accent hue. */
+  --color-primary: #6d6af5;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #21214a;
+  --color-on-primary-container: #c7c6ff;
+  --color-inverse-primary: #c2c1ff;
+  --color-surface-tint: #6d6af5;
+
+  /* Secondary — muted, used only to distinguish a second chart series,
+     never as a UI accent alongside primary. */
+  --color-secondary: #7c8794;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #1c1c20;
+  --color-on-secondary-container: #c7cdd4;
+  --color-secondary-fixed: #7c8794;
+  --color-secondary-fixed-dim: #5f6873;
+  --color-on-secondary-fixed: #ffffff;
+  --color-on-secondary-fixed-variant: #c7cdd4;
+
+  --color-tertiary: #d99a4e;
+  --color-on-tertiary: #2a1900;
+  --color-tertiary-container: #3a2a10;
+  --color-on-tertiary-container: #f0c98f;
+  --color-tertiary-fixed: #f0c98f;
+  --color-tertiary-fixed-dim: #d99a4e;
+  --color-on-tertiary-fixed: #2a1900;
+  --color-on-tertiary-fixed-variant: #3a2a10;
+
+  /* Semantic — muted, reserved for deltas/status dots/small pills only. */
+  --color-error: #ef5f66;
+  --color-on-error: #ffffff;
+  --color-error-container: #35171a;
+  --color-on-error-container: #ffb4ab;
+
+  --color-inverse-surface: #f2f2f4;
+  --color-inverse-on-surface: #232327;
+
+  --color-on-primary-fixed: #0c006b;
+  --color-on-primary-fixed-variant: #c7c6ff;
+  --color-primary-fixed: #c7c6ff;
+  --color-primary-fixed-dim: #6d6af5;
+
+  --radius-DEFAULT: 0.625rem;
   --radius-lg: 0.75rem;
-  --radius-xl: 1.25rem;
-  --radius-2xl: 1.75rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.125rem;
   --radius-full: 999px;
 
-  --shadow-card:
-    0 1px 2px rgba(27, 27, 35, 0.04), 0 8px 24px -12px rgba(68, 65, 204, 0.18);
-  --shadow-pill: 0 1px 2px rgba(27, 27, 35, 0.06);
+  /* Flat by default — separation comes from a 1px border, not elevation.
+     Shadows are reserved for transient/overlay elements only. */
+  --shadow-card: none;
+  --shadow-pill: 0 2px 8px -2px rgba(0, 0, 0, 0.45);
 
   /* use space-* names so they don't collide with
      Tailwind container sizes (max-w-md, max-w-sm, …). */
@@ -94,8 +111,8 @@
   --text-code--letter-spacing: 0em;
   --text-code--font-weight: 450;
 
-  --text-h1: 20px;
-  --text-h1--line-height: 28px;
+  --text-h1: 24px;
+  --text-h1--line-height: 30px;
   --text-h1--letter-spacing: -0.02em;
   --text-h1--font-weight: 600;
 
@@ -110,79 +127,19 @@
   --text-h2--font-weight: 600;
 
   /* Compact figures for dashboard stats (prefer over text-h1) */
-  --text-stat: 22px;
-  --text-stat--line-height: 28px;
+  --text-stat: 30px;
+  --text-stat--line-height: 34px;
   --text-stat--letter-spacing: -0.02em;
   --text-stat--font-weight: 600;
 
   --font-h1-size: 20px;
   --font-h1-line: 28px;
-
-  --color-card: #1b1b1b;
-}
-
-html[data-theme="dark"] {
-  @theme {
-    --color-surface-bright: #3a3939;
-    --color-surface-container-lowest: #0e0e0e;
-    --color-tertiary: #ffb786;
-    --color-on-tertiary: #502400;
-    --color-secondary: #c7c6c6;
-    --color-outline-variant: #464554;
-    --color-on-tertiary-fixed-variant: #723600;
-    --color-primary-fixed-dim: #c2c1ff;
-    --color-on-primary-fixed: #0c006b;
-    --color-on-primary-fixed-variant: #332dbc;
-    --color-tertiary-fixed: #ffdcc6;
-    --color-on-surface-variant: #c7c4d7;
-    --color-surface-container-low: #1c1b1b;
-    --color-on-background: #e5e2e1;
-    --color-tertiary-container: #ae5600;
-    --color-primary-fixed: #e2dfff;
-    --color-inverse-on-surface: #313030;
-    --color-inverse-primary: #4d4ad5;
-    --color-surface-dim: #131313;
-    --color-surface-tint: #c2c1ff;
-    --color-on-secondary-fixed-variant: #464747;
-    --color-surface-container-highest: #353534;
-    --color-error: #ffb4ab;
-    --color-surface: #131313;
-    --color-secondary-fixed: #e3e2e2;
-    --color-surface-container-high: #2a2a2a;
-    --color-secondary-fixed-dim: #c7c6c6;
-    --color-on-error-container: #ffdad6;
-    --color-on-secondary-fixed: #1a1c1c;
-    --color-primary-container: #5e5ce6;
-    --color-on-primary-container: #f4f1ff;
-    --color-on-secondary-container: #b8b8b8;
-    --color-primary: #0c6e9978;
-    --color-on-secondary: #2f3131;
-    --color-on-surface: #e5e2e1;
-    --color-outline: #918fa0;
-    --color-surface-container: #201f1f;
-    --color-secondary-container: #484949;
-    --color-on-primary: #1800a7;
-    --color-background: #131313;
-    --color-on-tertiary-fixed: #311300;
-    --color-on-error: #690005;
-    --color-error-container: #93000a;
-    --color-on-tertiary-container: #ffefe7;
-    --color-tertiary-fixed-dim: #ffb786;
-    --color-inverse-surface: #e5e2e1;
-    --color-surface-variant: #353534;
-  }
 }
 
 body {
-  background-color: var(--color-surface);
+  background-color: var(--color-background);
+  color: var(--color-on-background);
   font-size: 14px;
-}
-
-/* Design-system lift: every existing bordered surface card (built before the
-   ui/Card component existed) picks up the same soft shadow automatically,
-   so pages don't need per-card edits to feel consistent. */
-[class*="rounded-xl"][class*="border-outline-variant"] {
-  box-shadow: var(--shadow-card);
 }
 *::-webkit-scrollbar {
   width: 8px;
@@ -192,7 +149,7 @@ body {
   background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: #2c2c2c;
+  background: var(--color-surface-container-high);
   border-radius: 10px;
 }
 

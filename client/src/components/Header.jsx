@@ -1,146 +1,127 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
-import { Plus, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, UserRound, Bell, Server, ChevronDown, Check } from "lucide-react";
+import { useSystemStore } from "../store/system";
+import { computeServerStatus } from "../lib/utils";
 
-export default function Header({ servers, selectedServer }) {
+export default function Header({ servers, selectedServer, activeLabel }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const systemData = useSystemStore((state) => state.systemData);
+  const { dot } = computeServerStatus(systemData, selectedServer);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
 
   return (
-    <header className="grid grid-cols-3 items-center justify-between p-3 px-4 bg-card rounded-md">
-      {/* BRAND */}
-      <NavLink
-        to="/servers"
-        className="flex items-center gap-space-xs shrink-0 hover:opacity-80 transition-opacity"
-      >
-        <span className="logo text-3xl">DocoPilot</span>
-      </NavLink>
+    <header className="flex items-center justify-between gap-space-md px-6 py-3.5 border-b border-outline-variant shrink-0">
+      <span className="font-h2 text-h2 text-on-surface">{activeLabel}</span>
 
-      {/* TOP NAV PILLS */}
-      {/* <nav className="flex items-center gap-1 bg-surface-container rounded-full p-1 mx-auto shadow-pill">
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.name}
-            to={`/${selectedServer?.id ?? ""}${item.path}`}
-            end={item.path === ""}
-            className={({ isActive }) =>
-              `flex items-center gap-space-xs px-space-sm py-1.5 rounded-full transition-colors whitespace-nowrap font-body-main text-body-main ${
-                isActive
-                  ? "bg-surface-container-lowest text-primary font-semibold shadow-pill"
-                  : "text-on-surface-variant hover:text-on-surface"
-              }`
-            }
-          >
-            <span className="material-symbols-outlined text-[18px]">
-              {item.icon}
-            </span>
-            <span className="hidden md:inline">{item.name}</span>
-          </NavLink>
-        ))}
-      </nav> */}
-      <div></div>
-
-      <div className="flex items-center justify-end gap-space-sm shrink-0">
+      <div className="flex items-center gap-space-sm shrink-0">
         {/* SERVER DROPDOWN */}
         {servers && selectedServer && (
-          <div className="relative">
-            <div
+          <div className="relative" ref={dropdownRef}>
+            <button
               onClick={() => setOpen(!open)}
-              className="flex items-center gap-space-sm bg-surface-container px-space-sm py-1.5 rounded-full cursor-pointer hover:bg-surface-container-high transition-colors"
+              className={`flex items-center gap-space-xs h-9 px-space-xs rounded-md cursor-pointer transition-colors ${
+                open ? "bg-surface-container" : "hover:bg-surface-container"
+              }`}
             >
-              <div className="flex items-center gap-space-xs">
-                <span className="material-symbols-outlined text-[20px] text-primary">
-                  dns
-                </span>
+              <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dot}`}></span>
 
-                <div className="flex-col leading-tight hidden lg:flex">
-                  <span className="text-[13px] font-semibold text-on-surface">
-                    {selectedServer.name}
-                  </span>
+              <span className="text-[13px] font-medium text-on-surface hidden sm:inline">
+                {selectedServer.name}
+              </span>
 
-                  <span className="text-[11px] text-on-surface-variant font-code">
-                    {selectedServer.ip}
-                  </span>
-                </div>
-              </div>
-
-              <span
-                className={`material-symbols-outlined text-[18px] text-on-surface-variant transition-transform duration-300 ${
+              <ChevronDown
+                size={14}
+                className={`text-on-surface-variant transition-transform duration-300 ${
                   open ? "rotate-180" : "rotate-0"
                 }`}
-              >
-                keyboard_arrow_down
-              </span>
-            </div>
+              />
+            </button>
 
             {/* DROPDOWN MENU */}
             <div
-              className={`absolute right-0 mt-2 w-52.5 bg-surface-container-lowest border border-outline-variant rounded-xl shadow-card overflow-hidden z-50 transition-all duration-300 ease-in-out ${
+              className={`absolute right-0 mt-2 w-64 origin-top-right bg-surface-container-high border border-outline rounded-lg z-50 transition-all duration-150 ease-out ${
                 open
-                  ? "max-h-64 opacity-100"
-                  : "max-h-0 opacity-0 border-transparent"
+                  ? "opacity-100 scale-100 pointer-events-auto shadow-pill"
+                  : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
-              {servers.map((server) => (
-                <div
-                  key={server.id}
-                  onClick={() => {
-                    navigate(`/${server.id}`);
-                    setOpen(false);
-                  }}
-                  className={`px-space-sm py-1.5 cursor-pointer hover:bg-surface-container-high transition-colors ${
-                    selectedServer.id === server.id
-                      ? "bg-surface-container-high"
-                      : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-space-sm">
-                    <span className="material-symbols-outlined text-primary text-[18px]">
-                      dns
-                    </span>
+              <span className="block px-space-sm pt-space-sm pb-space-xs font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider">
+                Servers
+              </span>
+              <div className="px-1.5 pb-1.5 max-h-56 overflow-y-auto">
+                {servers.map((server) => {
+                  const isSelected = selectedServer.id === server.id;
+                  return (
+                    <div
+                      key={server.id}
+                      onClick={() => {
+                        navigate(`/${server.id}`);
+                        setOpen(false);
+                      }}
+                      className={`flex items-center gap-space-sm px-space-xs py-2 rounded-md cursor-pointer transition-colors ${
+                        isSelected
+                          ? "bg-surface-container-highest"
+                          : "hover:bg-surface-container-highest"
+                      }`}
+                    >
+                      <div className="h-7 w-7 rounded-md bg-surface-container-highest flex items-center justify-center shrink-0">
+                        <Server size={14} className="text-on-surface-variant" />
+                      </div>
 
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-on-surface">
-                        {server.name}
-                      </span>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-[13px] font-medium text-on-surface truncate">
+                          {server.name}
+                        </span>
 
-                      <span className="text-xs text-on-surface-variant font-code">
-                        {server.ip}
-                      </span>
+                        <span className="text-[11px] text-on-surface-variant font-code">
+                          {server.ip}
+                        </span>
+                      </div>
+
+                      {isSelected && (
+                        <Check size={15} className="text-primary ml-auto shrink-0" />
+                      )}
                     </div>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
+              </div>
               <div
                 onClick={() => {
                   navigate("/servers");
                   setOpen(false);
                 }}
-                className="px-space-sm py-1.5 cursor-pointer hover:bg-surface-container-high transition-colors border-t border-outline-variant flex items-center gap-space-sm text-primary"
+                className="flex items-center gap-space-sm px-space-sm py-2.5 cursor-pointer hover:bg-surface-container-highest transition-colors border-t border-outline-variant text-primary"
               >
-                <Plus size={16} />
-                <span className="text-sm font-medium">Manage Servers</span>
+                <Plus size={15} />
+                <span className="text-[13px] font-medium">Manage Servers</span>
               </div>
             </div>
           </div>
         )}
 
+        <span className="h-6 w-px bg-outline-variant mx-space-xs"></span>
+
         {/* ICONS */}
-        <div className="flex items-center gap-1">
-          <span className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1.5 rounded-full hover:bg-surface-container">
-            notifications
-          </span>
-          <span className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors cursor-pointer p-1.5 rounded-full hover:bg-surface-container">
-            cloud_done
-          </span>
-        </div>
+        <button className="h-9 w-9 flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer rounded-md hover:bg-surface-container">
+          <Bell size={16} />
+        </button>
 
         {/* PROFILE */}
-        <div className="h-8 w-8 rounded-full bg-primary-container flex items-center justify-center overflow-hidden cursor-pointer">
-          <UserRound size={18}/>
-          {/* <span className="material-symbols-outlined text-on-primary-container text-[18px]">
-            account_circle
-          </span> */}
+        <div className="h-9 w-9 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden cursor-pointer">
+          <UserRound size={15} className="text-on-surface-variant" />
         </div>
       </div>
     </header>

@@ -9,14 +9,8 @@ export default function NodConnectionError() {
     <>
       {/* <!-- Error Status Indicator --> */}
       <div className="flex flex-col items-center text-center mb-space-md">
-        <div className="w-14 h-14 rounded-full bg-[#751f24] flex items-center justify-center mb-space-md">
-          <Info size={24} />
-          {/* <span
-            className="material-symbols-outlined text-error text-[32px]"
-            data-icon="error_outline"
-          >
-            error_outline
-          </span> */}
+        <div className="w-14 h-14 rounded-full bg-error-container flex items-center justify-center mb-space-md">
+          <Info size={24} className="text-on-error-container" />
         </div>
         <h2 className="font-h1 text-h1 text-on-surface mb-space-xs">
           Node Offline
@@ -29,7 +23,7 @@ export default function NodConnectionError() {
       </div>
       {/* <!-- Centered Error Card --> */}
       <div className="space-y-space-md">
-        <div className="bg-[#232323] p-space-md rounded-lg">
+        <div className="bg-surface-container border border-outline-variant p-space-md rounded-lg">
           <h3 className="font-h2 text-h2 text-on-surface mb-space-sm flex items-center gap-space-xs">
             Troubleshooting Steps
           </h3>
@@ -43,7 +37,7 @@ export default function NodConnectionError() {
               <span className="font-bold text-primary">2.</span>
               <span>
                 SSH into the node and ensure the
-                <code className="font-code text-error bg-[#751f24] px-base rounded inline-block mx-1">
+                <code className="font-code text-error bg-error-container px-base rounded inline-block mx-1">
                   docker-agent
                 </code>
                 service is active and running.
@@ -54,7 +48,7 @@ export default function NodConnectionError() {
               <span>
                 Verify API firewall rules and security groups permit traffic on
                 port
-                <code className="font-code bg-surface-variant px-base rounded inline-block mx-1">
+                <code className="font-code bg-surface-container-high px-base rounded inline-block mx-1">
                   2375
                 </code>
                 .
@@ -63,16 +57,16 @@ export default function NodConnectionError() {
           </ul>
         </div>
         <div className="flex items-center justify-center">
-          <button className="bg-primary px-space-md py-space-sm rounded-md font-body-main font-semibold hover:opacity-90 transition-all active:scale-95 flex items-center gap-space-xs">
+          <button className="bg-primary text-on-primary px-space-md py-space-sm rounded-md font-body-main font-semibold hover:opacity-90 transition-all active:scale-95 flex items-center gap-space-xs">
             <RefreshCw size={16} />
             Retry Connection
           </button>
         </div>
       </div>
       <div className="flex items-center gap-3 my-5 w-full">
-        <span className="flex-1 h-px bg-on-background"></span>
-        <span>OR</span>
-        <span className="flex-1 h-px bg-on-background"></span>
+        <span className="flex-1 h-px bg-outline-variant"></span>
+        <span className="text-on-surface-variant text-body-main">OR</span>
+        <span className="flex-1 h-px bg-outline-variant"></span>
       </div>
       <AgentInstallation />
     </>

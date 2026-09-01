@@ -23,14 +23,14 @@ export default function VerifyEmail() {
   }, [token]);
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-space-md min-h-screen">
-      <div className="bg-surface-container-lowest border border-outline-variant rounded-xl p-8 shadow-sm max-w-md w-full text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center p-space-md bg-background">
+      <div className="bg-card border border-outline-variant rounded-lg p-8 max-w-md w-full text-center">
         {status === "verifying" && (
           <p className="text-body-main text-on-surface-variant">Verifying your email…</p>
         )}
         {status === "success" && (
           <>
-            <h2 className="text-h2 text-on-surface mb-2">Email verified</h2>
+            <h2 className="text-h2 font-h2 text-on-surface mb-2">Email verified</h2>
             <p className="text-body-main text-on-surface-variant mb-6">
               Your email address has been confirmed.
             </p>
@@ -41,7 +41,7 @@ export default function VerifyEmail() {
         )}
         {status === "error" && (
           <>
-            <h2 className="text-h2 text-error mb-2">Verification failed</h2>
+            <h2 className="text-h2 font-h2 text-error mb-2">Verification failed</h2>
             <p className="text-body-main text-on-surface-variant mb-6">{error}</p>
             <Link to="/login" className="text-primary font-medium hover:underline">
               Back to login

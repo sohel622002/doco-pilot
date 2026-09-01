@@ -5,7 +5,11 @@ export default function RootRedirect() {
   const { data, isLoading } = useServers()
 
   if (isLoading) {
-    return <p>Loading...</p>
+    return (
+      <div className="h-screen flex items-center justify-center bg-background text-on-surface-variant font-body-main text-body-main">
+        Loading…
+      </div>
+    )
   }
 
   const firstServer = data?.servers?.[0]

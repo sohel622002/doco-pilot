@@ -8,8 +8,11 @@ import {
   ArrowUp,
   ArrowUpDown,
   Box,
+  CheckCircle2,
   FileText,
+  Filter,
   Info,
+  Layers,
   Pause,
   Play,
   RefreshCw,
@@ -22,6 +25,7 @@ import InspectModal from "../components/InspectModal";
 import DeployContainerModal from "../components/DeployContainerModal";
 import { useLogsStore } from "../store/logs";
 import { useInspectStore } from "../store/inspect";
+import { Card, Badge, Button } from "../components/ui";
 
 const STATS_POLL_MS = 5000;
 
@@ -33,12 +37,20 @@ function formatBytes(bytes) {
   return `${(bytes / 1024 ** i).toFixed(1)} ${units[i]}`;
 }
 
+function formatPort(port) {
+  const suffix = port.Type ? `/${port.Type}` : "";
+  if (port.PublicPort) {
+    return `${port.IP && port.IP !== "0.0.0.0" ? port.IP : ""}:${port.PublicPort}→${port.PrivatePort}${suffix}`;
+  }
+  return `${port.PrivatePort}${suffix}`;
+}
+
 function SortHeader({ label, sortKey, activeSort, onSort }) {
   const isActive = activeSort.key === sortKey;
   const Icon = isActive ? (activeSort.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
   return (
     <th
-      className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest cursor-pointer select-none"
+      className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider whitespace-nowrap cursor-pointer select-none hover:text-on-surface transition-colors"
       onClick={() => onSort(sortKey)}
     >
       <span className="inline-flex items-center gap-1">
@@ -135,90 +147,87 @@ export default function Containers() {
     return () => clearInterval(interval);
   }, [serverId, isConnected]);
 
+  const allStopped = containers.length > 0 && runningContainers === 0;
+
   return (
-    <div className="">
+    <div className="max-w-container-max mx-auto">
       {/* <!-- Page Header & Filters --> */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
         <div>
-          <h2 className="font-h1 text-h1 text-on-surface">Containers</h2>
+          <h2 className="font-h1 text-h1 text-on-surface mb-space-xs">Containers</h2>
           <p className="text-on-surface-variant font-body-main">
             Manage your active container instances and clusters.
           </p>
         </div>
         <div className="flex items-center gap-space-sm">
-          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-full cursor-pointer hover:bg-surface-container transition-colors">
-            <span className="material-symbols-outlined text-sm">
-              filter_list
-            </span>
-            <span className="text-label-caps uppercase tracking-wider">
-              Status: All
-            </span>
-          </div>
-          <div className="flex items-center gap-space-xs bg-surface-container-low border border-outline-variant px-space-sm py-space-xs rounded-full cursor-pointer hover:bg-surface-container transition-colors">
-            <span className="material-symbols-outlined text-sm">stacks</span>
-            <span className="text-label-caps uppercase tracking-wider">
-              Stack: All
-            </span>
-          </div>
-          <button
-            onClick={() => setDeployOpen(true)}
-            className="bg-primary text-on-primary px-space-md py-space-xs rounded-full font-body-main font-bold hover:opacity-90 transition-opacity"
-          >
-            Deploy Container
+          <button className="flex items-center gap-space-xs h-9 px-space-sm rounded-md border border-outline-variant text-on-surface-variant text-[13px] font-medium hover:bg-surface-container transition-colors">
+            <Filter size={14} />
+            Status: All
           </button>
+          <button className="flex items-center gap-space-xs h-9 px-space-sm rounded-md border border-outline-variant text-on-surface-variant text-[13px] font-medium hover:bg-surface-container transition-colors">
+            <Layers size={14} />
+            Stack: All
+          </button>
+          <Button onClick={() => setDeployOpen(true)}>Deploy Container</Button>
         </div>
       </div>
       {containers && containers.length > 0 && (
         <>
-          <div className="grid grid-cols-12 gap-space-md mb-space-lg">
-            <div className="col-span-12 lg:col-span-8 bg-surface-container-low border border-outline-variant rounded-xl py-space-md flex items-center justify-between">
+          <div className="grid grid-cols-12 gap-3 mb-3">
+            <Card className="col-span-12 lg:col-span-8 flex items-center">
               <div className="flex w-full">
                 <div className="flex-1 text-center">
-                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
-                    RUNNING
+                  <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-space-xs">
+                    Running
                   </p>
-                  <p className="font-h1 text-stat text-primary">
-                    {runningContainers ?? 0}
-                  </p>
+                  <p className="text-stat text-on-surface">{runningContainers ?? 0}</p>
                 </div>
                 <div className="flex-1 text-center border-l border-outline-variant">
-                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
-                    STOPPED
+                  <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-space-xs">
+                    Stopped
                   </p>
-                  <p className="font-h1 text-stat text-secondary">{stoppedContainers ?? 0}</p>
+                  <p className="text-stat text-on-surface">{stoppedContainers ?? 0}</p>
                 </div>
                 <div className="flex-1 text-center border-l border-outline-variant">
-                  <p className="text-label-caps text-on-surface-variant mb-space-xs">
-                    PAUSED
+                  <p className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider mb-space-xs">
+                    Paused
                   </p>
-                  <p className="font-h1 text-stat text-on-surface">{pausedContainers ?? 0}</p>
+                  <p className="text-stat text-on-surface">{pausedContainers ?? 0}</p>
                 </div>
               </div>
-            </div>
-            <div className="col-span-12 lg:col-span-4 bg-primary text-on-primary rounded-xl p-space-md relative overflow-hidden">
-              <div className="relative z-10">
-                <h3 className="font-h2 text-h2 mb-space-xs">Docker Node Healthy</h3>
-                <p className="font-body-main opacity-80">
-                  All 4 nodes are reporting stable heartbeat responses.
+            </Card>
+            <Card className="col-span-12 lg:col-span-4 flex items-center gap-space-md">
+              <div
+                className={`h-10 w-10 rounded-md flex items-center justify-center shrink-0 ${
+                  allStopped ? "bg-error-container" : "bg-[#173626]"
+                }`}
+              >
+                <CheckCircle2 size={18} className={allStopped ? "text-error" : "text-[#5fd696]"} />
+              </div>
+              <div>
+                <h3 className="font-h2 text-h2 text-on-surface">
+                  {allStopped ? "No Containers Running" : "Docker Host Healthy"}
+                </h3>
+                <p className="font-body-main text-body-main text-on-surface-variant">
+                  {allStopped
+                    ? "Every container on this host is stopped."
+                    : "This host is reporting a stable heartbeat."}
                 </p>
               </div>
-              <span className="material-symbols-outlined absolute -right-space-md -bottom-space-md text-8xl opacity-10 rotate-12">
-                check_circle
-              </span>
-            </div>
+            </Card>
           </div>
-          <div className="bg-surface-container-low border border-outline-variant rounded-xl overflow-hidden">
+          <div className="bg-card border border-outline-variant rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-surface-container-low border-b border-outline-variant">
-                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
                       Container Name
                     </th>
-                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
                       Image Source
                     </th>
-                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
                       Status
                     </th>
                     <SortHeader label="CPU %" sortKey="cpu" activeSort={sort} onSort={handleSort} />
@@ -229,10 +238,10 @@ export default function Containers() {
                       activeSort={sort}
                       onSort={handleSort}
                     />
-                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
                       Port Mappings
                     </th>
-                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-widest text-right">
+                    <th className="px-space-md py-space-sm font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider whitespace-nowrap text-right">
                       Quick Actions
                     </th>
                   </tr>
@@ -243,20 +252,22 @@ export default function Containers() {
                       className="hover:bg-surface-container-low transition-colors group"
                       key={container.id}
                     >
-                      <td className="px-space-md py-space-md">
-                        <div className="flex items-center gap-space-sm">
-                          <div className="w-8 h-8 rounded bg-primary-container/20 flex items-center justify-center text-primary">
-                            {container?.process ? <Spinner /> : <Box />}
+                      <td className="px-space-md py-space-md max-w-56">
+                        <div className="flex items-center gap-space-sm min-w-0">
+                          <div className="w-8 h-8 rounded-md bg-surface-container-high flex items-center justify-center text-on-surface-variant shrink-0">
+                            {container?.process ? <Spinner /> : <Box size={15} />}
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <p className="font-h2 text-[14px] text-on-surface flex items-center gap-space-xs">
-                              {container?.names[0]}
+                              <span className="truncate" title={container?.names[0]}>
+                                {container?.names[0]}
+                              </span>
                               {container?.healthStatus && (
                                 <span
                                   title={`Healthcheck: ${container.healthStatus}`}
-                                  className={`w-2 h-2 rounded-full ${
+                                  className={`h-1.5 w-1.5 rounded-full shrink-0 ${
                                     container.healthStatus === "healthy"
-                                      ? "bg-primary"
+                                      ? "bg-[#5fd696]"
                                       : container.healthStatus === "unhealthy"
                                         ? "bg-error"
                                         : "bg-outline"
@@ -266,50 +277,44 @@ export default function Containers() {
                               {container?.restartCount > 0 && (
                                 <span
                                   title={`Restarted ${container.restartCount} time(s)`}
-                                  className="inline-flex items-center px-space-xs rounded-full bg-secondary-container text-secondary text-[10px] leading-4"
+                                  className="inline-flex items-center px-space-xs rounded-full bg-surface-container-high text-on-surface-variant text-[10px] leading-4 shrink-0"
                                 >
                                   ↻ {container.restartCount}
                                 </span>
                               )}
                             </p>
-                            <p className="text-label-caps text-on-surface-variant">
+                            <p className="font-label-caps text-label-caps text-on-surface-variant">
                               ID: {container?.shortId}
                             </p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-space-md py-space-md">
-                        <span className="font-code text-code text-on-surface-variant bg-surface-container px-space-xs py-1 rounded">
+                      <td className="px-space-md py-space-md max-w-48">
+                        <span
+                          className="block truncate font-code text-code text-on-surface-variant bg-surface-container px-space-xs py-1 rounded"
+                          title={container?.image}
+                        >
                           {container?.image}
                         </span>
                       </td>
                       <td className="px-space-md py-space-md">
                         {container?.state === "running" && (
-                          <span
-                            title={container?.status}
-                            className="inline-flex items-center gap-space-xs px-space-xs py-1 rounded-full bg-primary-container/20 text-primary text-label-caps"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                          <Badge tone="success" title={container?.status}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#5fd696]"></span>
                             Running
-                          </span>
+                          </Badge>
                         )}
                         {container?.state === "exited" && (
-                          <span
-                            title={container?.status}
-                            className="inline-flex items-center gap-space-xs px-space-xs py-1 rounded-full bg-secondary-container text-secondary text-label-caps"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                          <Badge tone="neutral" title={container?.status}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-on-surface-variant"></span>
                             Stopped
-                          </span>
+                          </Badge>
                         )}
                         {container?.state === "paused" && (
-                          <span
-                            title={container?.status}
-                            className="inline-flex items-center gap-space-xs px-space-xs py-1 rounded-full border border-secondary-container text-secondary text-label-caps"
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                          <Badge tone="warning" title={container?.status}>
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#e8b458]"></span>
                             Paused
-                          </span>
+                          </Badge>
                         )}
                       </td>
                       <td className="px-space-md py-space-md">
@@ -319,27 +324,28 @@ export default function Containers() {
                             : "-"}
                         </span>
                       </td>
-                      <td className="px-space-md py-space-md">
+                      <td className="px-space-md py-space-md whitespace-nowrap">
                         <span className="font-code text-code text-on-surface-variant">
                           {container?.state === "running" && container?.stats
                             ? `${formatBytes(container.stats.memory.usedBytes)} / ${formatBytes(container.stats.memory.limitBytes)}`
                             : "-"}
                         </span>
                       </td>
-                      <td className="px-space-md py-space-md">
+                      <td className="px-space-md py-space-md whitespace-nowrap">
                         <span className="font-code text-code text-on-surface-variant">
                           {container?.state === "running" && container?.stats
                             ? `↓${formatBytes(container.stats.network.rxBytes)} / ↑${formatBytes(container.stats.network.txBytes)}`
                             : "-"}
                         </span>
                       </td>
-                      <td className="px-space-md py-space-md">
-                        <span className="font-code text-code text-on-surface-variant">
-                          {container?.ports.length > 0 ? (
-                            <span>{container?.ports.join(", ")}</span>
-                          ) : (
-                            <span>-</span>
-                          )}
+                      <td className="px-space-md py-space-md max-w-40">
+                        <span
+                          className="block truncate font-code text-code text-on-surface-variant"
+                          title={container?.ports?.length > 0 ? container.ports.map(formatPort).join(", ") : "-"}
+                        >
+                          {container?.ports?.length > 0
+                            ? [...new Set(container.ports.map(formatPort))].join(", ")
+                            : "-"}
                         </span>
                       </td>
                       <td className="px-space-md py-space-md text-right">
