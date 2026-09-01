@@ -8,7 +8,6 @@ import {
   HardDrive,
   Waypoints,
   BellRing,
-  ServerCog,
   Settings as SettingsIcon,
 } from "lucide-react";
 import Header from "./components/Header";
@@ -23,7 +22,6 @@ const NAV_ITEMS = [
   { name: "Volumes", path: "/volumes", icon: HardDrive },
   { name: "Networks", path: "/networks", icon: Waypoints },
   { name: "Alerts", path: "/alerts", icon: BellRing },
-  { name: "Infrastructure", path: "/infrastructure", icon: ServerCog },
   { name: "Settings", path: "/settings", icon: SettingsIcon },
 ];
 

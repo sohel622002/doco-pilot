@@ -120,9 +120,12 @@ export default function Header({ servers, selectedServer, activeLabel }) {
         </button>
 
         {/* PROFILE */}
-        <div className="h-9 w-9 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden cursor-pointer">
+        <button
+          onClick={() => navigate(`/${selectedServer?.id ?? ""}/profile`)}
+          className="h-9 w-9 rounded-full bg-surface-container-high flex items-center justify-center overflow-hidden cursor-pointer hover:bg-surface-container-highest transition-colors"
+        >
           <UserRound size={15} className="text-on-surface-variant" />
-        </div>
+        </button>
       </div>
     </header>
   );

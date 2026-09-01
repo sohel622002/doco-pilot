@@ -6,6 +6,7 @@
     "dev:server": "npm run dev --prefix server",
     "dev:client": "npm run dev --prefix client",
     "dev:agent": "docker compose -f docker-compose.agent.yml up --build",
-    "stop:agent": "docker compose -f docker-compose.agent.yml down"
+    "stop:agent": "docker compose -f docker-compose.agent.yml down",
+    "dev:all": "powershell -ExecutionPolicy Bypass -File ./dev.ps1"
   }
 }

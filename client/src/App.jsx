@@ -6,7 +6,7 @@ import Volumes from "./pages/Volumes";
 import Networks from "./pages/Networks";
 import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
-import Infrastructure from "./pages/Infrastructure";
+import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -38,7 +38,7 @@ function App() {
               <Route path="networks" element={<Networks />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="settings" element={<Settings />} />
-              <Route path="infrastructure" element={<Infrastructure />} />
+              <Route path="profile" element={<Profile />} />
             </Route>
             {/* Fallback for 404 pages */}
             <Route path="*" element={<h2>Not Found!</h2>} />
