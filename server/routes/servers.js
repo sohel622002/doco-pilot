@@ -15,9 +15,15 @@ const router = Router()
 // All server routes require auth
 router.use(requireAuth)
 
-// Helper — builds the docker run command string
+const DEFAULT_AGENT_IMAGE = 'ghcr.io/sohel622002/doco-pilot-agent:latest'
+
+// Helper — builds the docker run command string (no placeholder fallbacks)
 function buildDockerCommand(agentKey, agentSecret) {
-  const backendUrl = process.env.BACKEND_WS_URL ?? 'wss://yourbackend.com'
+  const backendUrl = process.env.BACKEND_WS_URL
+  if (!backendUrl) {
+    throw new Error('BACKEND_WS_URL is not configured')
+  }
+  const agentImage = process.env.AGENT_IMAGE || DEFAULT_AGENT_IMAGE
   return (
     `docker run -d --restart unless-stopped \\\n` +
     `  --name docker-manager-agent \\\n` +
@@ -25,7 +31,7 @@ function buildDockerCommand(agentKey, agentSecret) {
     `  -e AGENT_KEY="${agentKey}" \\\n` +
     `  -e AGENT_SECRET="${agentSecret}" \\\n` +
     `  -e BACKEND_WS_URL="${backendUrl}" \\\n` +
-    `  your-dockerhub/docker-manager-agent:latest`
+    `  ${agentImage}`
   )
 }
 
@@ -93,6 +99,14 @@ router.post('/', validateBody(createServerSchema), async (req, res) => {
 
   auditLog({ req, action: 'server:create', target: server.id })
 
+  let dockerCommand
+  try {
+    dockerCommand = buildDockerCommand(agentKey, agentSecret)
+  } catch (err) {
+    logger.error({ err }, 'Failed to build docker command')
+    return res.status(500).json({ error: 'Server misconfigured: BACKEND_WS_URL is required' })
+  }
+
   res.status(201).json({
     server: {
       id:         server.id,
@@ -102,7 +116,7 @@ router.post('/', validateBody(createServerSchema), async (req, res) => {
     },
     agentKey,
     agentSecret,
-    dockerCommand: buildDockerCommand(agentKey, agentSecret)
+    dockerCommand
   })
 })
 
@@ -153,11 +167,19 @@ router.get('/:id/credentials', async (req, res) => {
 
   auditLog({ req, action: 'server:credentials:view', target: req.params.id })
 
+  let dockerCommand
+  try {
+    dockerCommand = buildDockerCommand(agentKey, agentSecret)
+  } catch (err) {
+    logger.error({ err }, 'Failed to build docker command')
+    return res.status(500).json({ error: 'Server misconfigured: BACKEND_WS_URL is required' })
+  }
+
   res.json({
     server:        { id: data.id, name: data.name, ip: data.ip },
     agentKey,
     agentSecret,
-    dockerCommand: buildDockerCommand(agentKey, agentSecret)
+    dockerCommand
   })
 })
 
@@ -253,10 +275,18 @@ router.post('/:id/regenerate-key', async (req, res) => {
 
   auditLog({ req, action: 'server:regenerate-key', target: req.params.id })
 
+  let dockerCommand
+  try {
+    dockerCommand = buildDockerCommand(agentKey, agentSecret)
+  } catch (err) {
+    logger.error({ err }, 'Failed to build docker command')
+    return res.status(500).json({ error: 'Server misconfigured: BACKEND_WS_URL is required' })
+  }
+
   res.json({
     agentKey,
     agentSecret,
-    dockerCommand: buildDockerCommand(agentKey, agentSecret)
+    dockerCommand
   })
 })
 

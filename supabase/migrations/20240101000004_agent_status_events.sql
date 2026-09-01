@@ -1,6 +1,4 @@
--- Agent connect/disconnect log, used to derive 30-day uptime % on the
--- Alerts & Monitoring page (see MONETIZATION_PRODUCT_PLAN.md §2.7).
--- Run in the Supabase SQL editor.
+-- Agent connect/disconnect log (30-day uptime % on Alerts & Monitoring)
 
 create table if not exists public.agent_status_events (
   id         uuid primary key default gen_random_uuid(),

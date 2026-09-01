@@ -7,6 +7,8 @@
     "dev:client": "npm run dev --prefix client",
     "dev:agent": "docker compose -f docker-compose.agent.yml up --build",
     "stop:agent": "docker compose -f docker-compose.agent.yml down",
-    "dev:all": "powershell -ExecutionPolicy Bypass -File ./dev.ps1"
+    "dev:all": "powershell -ExecutionPolicy Bypass -File ./dev.ps1",
+    "db:push": "npx supabase db push",
+    "db:migration:new": "npx supabase migration new"
   }
 }

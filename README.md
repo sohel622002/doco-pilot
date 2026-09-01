@@ -102,8 +102,9 @@ What the product is aiming for (see [Project status](#project-status) for what a
 doco-pilot/
 ├── client/                 # Vite React app
 ├── server/                 # Express API + WebSocket hub
-│   ├── migrations/         # Incremental SQL (run in Supabase)
 │   └── supabase-schema.sql # Full schema reference
+├── supabase/               # Supabase CLI (migrations + config)
+│   └── migrations/         # Timestamped SQL applied via db push
 ├── agent/                  # Docker socket agent
 ├── deploy/                 # Example reverse-proxy configs
 ├── docker-compose.yml      # Server + client
@@ -119,6 +120,7 @@ doco-pilot/
 - **Node.js** 20+
 - **Docker Desktop** (or Docker Engine) — for the agent and optional Compose stack
 - A **Supabase** project (free tier is fine)
+- **Supabase CLI** (via `npx supabase` or a global install) — for schema migrations
 - Optional: Google Cloud OAuth client, Resend API key
 
 ---
@@ -139,10 +141,26 @@ npm install --prefix client
 ### 2. Database
 
 1. Create a Supabase project.
-2. In the SQL editor, run `server/supabase-schema.sql`.
-3. Also run any files under `server/migrations/` (in order), e.g.:
-   - `001_google_oauth.sql`
-   - `002_server_alerts.sql`
+2. In the SQL editor, run `server/supabase-schema.sql` (full current schema).
+3. Install/link the [Supabase CLI](https://supabase.com/docs/guides/cli) (or use `npx supabase` as in the root scripts):
+
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+```
+
+4. Baseline the four tracked migrations so `db push` does not re-apply schema already in `supabase-schema.sql`:
+
+```bash
+npx supabase migration repair --status applied 20240101000001
+npx supabase migration repair --status applied 20240101000002
+npx supabase migration repair --status applied 20240101000003
+npx supabase migration repair --status applied 20240101000004
+```
+
+Future schema changes: `npm run db:migration:new -- <name>`, edit the file under `supabase/migrations/`, then `npm run db:push`.
+
+**Existing projects** that already ran some hand-applied SQL: `migration repair --status applied` for whatever is already present, then `npm run db:push` for the rest.
 
 ### 3. Environment files
 
@@ -161,7 +179,8 @@ Fill at least these in **`server/.env`**:
 | `MASTER_ENCRYPTION_KEY` | 64 hex chars (32 bytes) — e.g. `openssl rand -hex 32` |
 | `SUPABASE_URL` | From Supabase settings |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key (server only — never expose to the client) |
-| `BACKEND_WS_URL` | `ws://localhost:3001/ws` for local agents |
+| `BACKEND_WS_URL` | Required. `ws://localhost:3001/ws` for local agents; `wss://…` in production. Used in the generated agent install command — no placeholder fallback. |
+| `AGENT_IMAGE` | Optional. Defaults to `ghcr.io/sohel622002/doco-pilot-agent:latest`. Override for forks or private registries. |
 
 **`client/.env`** (defaults usually work locally):
 

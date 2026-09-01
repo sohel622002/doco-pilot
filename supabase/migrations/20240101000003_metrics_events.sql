@@ -1,8 +1,5 @@
--- Metrics & events history store — backend foundation for trend charts,
--- activity feed, and the alerts page (see MONETIZATION_PRODUCT_PLAN.md §3).
--- Run in the Supabase SQL editor.
+-- Metrics & events history store — trend charts, activity feed, alerts page
 
--- Sampled system stats per server, used for trend charts & sparklines.
 create table if not exists public.server_metrics (
   id         uuid primary key default gen_random_uuid(),
   server_id  uuid not null references public.servers(id) on delete cascade,
@@ -18,7 +15,6 @@ create table if not exists public.server_metrics (
 create index if not exists server_metrics_server_id_ts_idx
   on public.server_metrics(server_id, ts desc);
 
--- Raw docker events (container/image lifecycle), used for the activity feed.
 create table if not exists public.docker_events (
   id         uuid primary key default gen_random_uuid(),
   server_id  uuid not null references public.servers(id) on delete cascade,
@@ -32,7 +28,6 @@ create table if not exists public.docker_events (
 create index if not exists docker_events_server_id_ts_idx
   on public.docker_events(server_id, ts desc);
 
--- Alert fire/resolve history, used for the alerts page + uptime calculation.
 create table if not exists public.alert_events (
   id         uuid primary key default gen_random_uuid(),
   server_id  uuid not null references public.servers(id) on delete cascade,

@@ -92,7 +92,7 @@ Maintainers may ask for changes; please respond or mark the PR as draft if youâ€
 
 - Validate inputs with Zod schemas under `server/schemas/`.
 - Log with Pino; donâ€™t `console.log` secrets.
-- Schema changes: update `supabase-schema.sql` **and** add a numbered file under `server/migrations/`.
+- Schema changes: update `server/supabase-schema.sql` **and** add a migration with `npm run db:migration:new -- <name>` (files land in `supabase/migrations/`). Apply with `npm run db:push`. For DBs that already match the schema file, baseline with `npx supabase migration repair --status applied <timestamp>` instead of re-running SQL.
 - Auth cookies and CORS must keep working across local client/server ports.
 
 ### Agent

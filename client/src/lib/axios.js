@@ -10,7 +10,6 @@ const api = axios.create({
 let refreshPromise = null;
 
 function redirectToLogin() {
-  localStorage.removeItem("access_token");
   window.location.href = "/login";
 }
 
