@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.*
+!.env.example
+tests
+docs
+*.md
+supabase-schema.sql
+.gitignore
