@@ -24,22 +24,25 @@ export function setAuthCookies(res, accessToken, refreshToken) {
   res.cookie('token', accessToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? 'strict' : 'lax',
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 15 * 60 * 1000 // 15 min
   })
 
   res.cookie('refresh_token', refreshToken, {
     httpOnly: true,
     secure: isProd,
-    sameSite: isProd ? 'strict' : 'lax',
+    sameSite: isProd ? 'none' : 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     path: '/api/auth/refresh' // only sent to refresh endpoint
   })
 }
 
 export function clearAuthCookies(res) {
-  res.clearCookie('token')
-  res.clearCookie('refresh_token', { path: '/api/auth/refresh' })
+  const isProd = process.env.NODE_ENV === 'production'
+  const sameSite = isProd ? 'none' : 'lax'
+
+  res.clearCookie('token', { httpOnly: true, secure: isProd, sameSite })
+  res.clearCookie('refresh_token', { httpOnly: true, secure: isProd, sameSite, path: '/api/auth/refresh' })
 }
 
 // ── Hashing ──────────────────────────────────────────────────
