@@ -10,8 +10,10 @@ export function requireAuth(req, res, next) {
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET)
 
-    // IP binding — reject if token was issued for a different IP
-    if (user.ip && user.ip !== req.ip) {
+    // Optional IP binding — off by default. Behind Render/Cloudflare/etc.
+    // req.ip often differs from the IP baked into the JWT (proxy hops,
+    // IPv4↔IPv6, mobile/CGNAT), which falsely returns "Token IP mismatch".
+    if (process.env.BIND_JWT_TO_IP === 'true' && user.ip && user.ip !== req.ip) {
       return res.status(401).json({ error: 'Token IP mismatch' })
     }
 
