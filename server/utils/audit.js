@@ -101,6 +101,76 @@ export function validateCidrOrIp(value) {
   return value
 }
 
+// Validate a client-generated exec session ID
+export function validateSessionId(id) {
+  if (!id || !/^[a-zA-Z0-9_-]{8,64}$/.test(id)) {
+    throw new Error('Invalid session ID format')
+  }
+  return id
+}
+
+// Validate a terminal dimension (cols/rows)
+export function validateExecDimension(value) {
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 1 || n > 1000) {
+    throw new Error('Invalid terminal dimension')
+  }
+  return n
+}
+
+// Validate raw exec stdin — can't restrict content (it's keystrokes/paste),
+// only cap size to prevent an abusive single message.
+export function validateExecInput(data) {
+  if (typeof data !== 'string' || data.length > 65536) {
+    throw new Error('Invalid exec input')
+  }
+  return data
+}
+
+// Validate Dockerfile text submitted for an image build — content itself
+// can't be meaningfully restricted (it's arbitrary build instructions the
+// user chose to run on their own VPS), only capped in size.
+export function validateDockerfileText(text) {
+  if (typeof text !== 'string' || text.length === 0 || text.length > 65536) {
+    throw new Error('Invalid Dockerfile content')
+  }
+  return text
+}
+
+// Validate a build-args object ({ KEY: "value", ... })
+export function validateBuildArgs(args) {
+  if (args === undefined || args === null) return {}
+  if (typeof args !== 'object' || Array.isArray(args)) {
+    throw new Error('Invalid build args')
+  }
+  const entries = Object.entries(args)
+  if (entries.length > 50) throw new Error('Too many build args')
+  const result = {}
+  for (const [key, value] of entries) {
+    if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) throw new Error(`Invalid build arg name: ${key}`)
+    if (typeof value !== 'string' || value.length > 4096) throw new Error(`Invalid build arg value: ${key}`)
+    result[key] = value
+  }
+  return result
+}
+
+// Validate a Compose stack/project name (Docker Compose project naming rules)
+export function validateStackName(name) {
+  if (!/^[a-z0-9][a-z0-9_-]{0,62}$/.test(name)) {
+    throw new Error('Invalid stack name — use lowercase letters, digits, - and _ only')
+  }
+  return name
+}
+
+// Validate compose YAML text — content is the user's own deploy spec for
+// their own VPS, only capped in size.
+export function validateComposeYaml(text) {
+  if (typeof text !== 'string' || text.length === 0 || text.length > 262144) {
+    throw new Error('Invalid compose file')
+  }
+  return text
+}
+
 // Validate a "KEY=VALUE" environment variable entry
 export function validateEnvVar(entry) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*=.{0,4096}$/.test(entry)) {

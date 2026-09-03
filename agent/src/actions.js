@@ -24,8 +24,11 @@ import {
   inspectNetwork,
   createNetwork,
   removeNetwork,
+  getEngineInfo,
+  getAggregatedLogs,
 } from "./docker.js";
 import { systemStats } from "./system.js";
+import { listStacks } from "./stacks.js";
 
 // Map action strings → handler functions
 const ACTION_HANDLERS = {
@@ -128,6 +131,18 @@ const ACTION_HANDLERS = {
   "networks:remove": async ({ networkId }) => ({
     type: "networks:remove:result",
     data: await removeNetwork(networkId),
+  }),
+  "stacks:list": async () => ({
+    type: "stacks:list:result",
+    data: await listStacks(),
+  }),
+  "system:engineInfo": async () => ({
+    type: "system:engineInfo:result",
+    data: await getEngineInfo(),
+  }),
+  "system:logsTail": async () => ({
+    type: "system:logsTail:result",
+    data: await getAggregatedLogs(),
   }),
 };
 

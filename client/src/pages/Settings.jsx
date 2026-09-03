@@ -4,6 +4,10 @@ import { BookOpen } from "lucide-react";
 import api from "../lib/axios";
 import { Card } from "../components/ui";
 import AgentInstallation from "../components/AgentInstallation";
+import EngineLogsPanel from "../components/EngineLogsPanel";
+import MembersPanel from "../components/MembersPanel";
+import { useServers } from "../hooks/useServers";
+import { isOwner } from "../lib/roles";
 
 function ServerSetupSection() {
   return (
@@ -67,6 +71,11 @@ function DangerZoneSection() {
 }
 
 export default function Settings() {
+  const { serverId } = useParams();
+  const { data } = useServers();
+  const selectedServer = data?.servers?.find((s) => s.id === serverId);
+  const role = selectedServer?.role;
+
   return (
     <div className="max-w-container-max mx-auto space-y-3">
       <div>
@@ -76,8 +85,14 @@ export default function Settings() {
         </p>
       </div>
 
-      <ServerSetupSection />
-      <DangerZoneSection />
+      {isOwner(role) && <ServerSetupSection />}
+      <Card>
+        <MembersPanel role={role} />
+      </Card>
+      <Card>
+        <EngineLogsPanel />
+      </Card>
+      {isOwner(role) && <DangerZoneSection />}
     </div>
   );
 }

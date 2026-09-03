@@ -4,6 +4,7 @@ import Images from "./pages/Images";
 import Containers from "./pages/Containers";
 import Volumes from "./pages/Volumes";
 import Networks from "./pages/Networks";
+import Stacks from "./pages/Stacks";
 import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
@@ -36,6 +37,7 @@ function App() {
               <Route path="images" element={<Images />} />
               <Route path="volumes" element={<Volumes />} />
               <Route path="networks" element={<Networks />} />
+              <Route path="stacks" element={<Stacks />} />
               <Route path="alerts" element={<Alerts />} />
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />

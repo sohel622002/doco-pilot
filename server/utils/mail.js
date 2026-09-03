@@ -31,6 +31,13 @@ export function verificationEmail(link) {
   `
 }
 
+export function memberInvitedEmail({ serverName, role, inviterName }) {
+  return `
+    <p>${inviterName} has given you <strong>${role}</strong> access to the server "${serverName}" on doco-pilot.</p>
+    <p>Log in to your doco-pilot account to see it in your server list.</p>
+  `
+}
+
 export function passwordResetEmail(link) {
   return `
     <p>We received a request to reset your doco-pilot password.</p>

@@ -1,4 +1,5 @@
 import Docker from "dockerode";
+import tar from "tar-stream";
 
 // {
 //   socketPath: process.env.DOCKER_SOCKET || '/var/run/docker.sock'
@@ -249,6 +250,34 @@ export async function pruneImages() {
   };
 }
 
+// Builds an image from Dockerfile text (single-file build context — no
+// COPY/ADD of extra files, since the only input we accept over the WS
+// protocol is the Dockerfile itself). Streams each build log line to
+// `onLog` as it arrives; resolves once the build completes.
+export async function buildImageFromDockerfile(dockerfileText, { tag, buildArgs = {} } = {}, onLog) {
+  const pack = tar.pack();
+  pack.entry({ name: "Dockerfile" }, dockerfileText);
+  pack.finalize();
+
+  const stream = await docker.buildImage(pack, { t: tag, buildargs: buildArgs });
+
+  return new Promise((resolve, reject) => {
+    docker.modem.followProgress(
+      stream,
+      (err, res) => {
+        if (err) return reject(err);
+        const failure = res?.find((r) => r.errorDetail || r.error);
+        if (failure) return reject(new Error(failure.errorDetail?.message || failure.error));
+        resolve({ ok: true, tag });
+      },
+      (event) => {
+        const line = event.stream ?? event.status ?? (event.error ? `ERROR: ${event.error}` : null);
+        if (line && line.trim()) onLog(line.replace(/\n$/, ""));
+      },
+    );
+  });
+}
+
 // ── Disk usage ───────────────────────────────────────────────
 
 export async function getDiskUsage() {
@@ -397,6 +426,85 @@ export async function removeNetwork(id) {
   const network = docker.getNetwork(id);
   await network.remove();
   return { ok: true, action: "remove", id };
+}
+
+// ── Engine info & aggregated logs ───────────────────────────────
+
+export async function getEngineInfo() {
+  const [version, info] = await Promise.all([docker.version(), docker.info()]);
+  return {
+    version: version.Version,
+    apiVersion: version.ApiVersion,
+    os: info.OperatingSystem,
+    arch: info.Architecture,
+    kernelVersion: info.KernelVersion,
+    storageDriver: info.Driver,
+    containers: info.Containers,
+    containersRunning: info.ContainersRunning,
+    containersPaused: info.ContainersPaused,
+    containersStopped: info.ContainersStopped,
+    images: info.Images,
+    cpus: info.NCPU,
+    memTotalBytes: info.MemTotal,
+  };
+}
+
+// Live container log tail aggregated across every running container —
+// there's no generic way to tail the dockerd daemon log from inside a
+// container, so this is the real substitute: each log line is already
+// timestamped (from `docker logs --timestamps`), so a lexical sort on
+// the ISO-8601 prefix is also a chronological sort.
+export async function getAggregatedLogs({ tailPerContainer = 20 } = {}) {
+  const containers = await docker.listContainers({ all: false });
+  const results = await Promise.all(
+    containers.map(async (c) => {
+      const name = c.Names?.[0]?.replace(/^\//, "") ?? c.Id.slice(0, 12);
+      try {
+        const logBuffer = await docker.getContainer(c.Id).logs({
+          stdout: true,
+          stderr: true,
+          tail: tailPerContainer,
+          timestamps: true,
+        });
+        return logBuffer
+          .toString("utf8")
+          .split("\n")
+          .filter(Boolean)
+          .map((line) => ({ container: name, line: line.length > 8 ? line.slice(8) : line }));
+      } catch {
+        return [];
+      }
+    }),
+  );
+  return results.flat().sort((a, b) => a.line.localeCompare(b.line));
+}
+
+// ── Interactive exec (shell-in-container) ─────────────────────
+
+// Starts an interactive TTY exec session inside a running container.
+// Returns the dockerode exec instance (for resize) and its hijacked
+// duplex stream (for stdin write / stdout read).
+export async function startExecSession(containerId, { cols, rows } = {}) {
+  const container = docker.getContainer(containerId);
+  const exec = await container.exec({
+    Cmd: ["/bin/sh", "-c", "exec bash 2>/dev/null || exec sh"],
+    AttachStdin: true,
+    AttachStdout: true,
+    AttachStderr: true,
+    Tty: true,
+  });
+
+  const stream = await exec.start({ hijack: true, stdin: true, Tty: true });
+
+  if (cols > 0 && rows > 0) {
+    await exec.resize({ w: cols, h: rows }).catch(() => {});
+  }
+
+  return { exec, stream };
+}
+
+export async function resizeExecSession(exec, cols, rows) {
+  await exec.resize({ w: cols, h: rows });
 }
 
 // ── Real-time Docker events (streamed to backend) ────────────

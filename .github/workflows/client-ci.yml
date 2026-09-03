@@ -23,6 +23,7 @@ jobs:
           cache-dependency-path: client/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm test
       - run: npm run build
         env:
           VITE_BACKEND_API_URL: http://localhost:3001

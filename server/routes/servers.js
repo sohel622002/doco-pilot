@@ -7,8 +7,11 @@ import { generateAgentCredentials } from '../utils/auth.js'
 import { auditLog } from '../utils/audit.js'
 import { encrypt, decrypt } from '../utils/encryption.js'
 import { validateBody } from '../middleware/validate.js'
-import { createServerSchema, updateServerSchema } from '../schemas/index.js'
+import { createServerSchema, updateServerSchema, createStackSchema, updateStackSchema, inviteMemberSchema, updateMemberSchema } from '../schemas/index.js'
 import { logger } from '../utils/logger.js'
+import { requireRole, getMembership } from '../utils/membership.js'
+import { sendMail, memberInvitedEmail } from '../utils/mail.js'
+import { invalidateServerMemberCache } from '../ws/index.js'
 
 const router = Router()
 
@@ -36,12 +39,26 @@ function buildDockerCommand(agentKey, agentSecret) {
 }
 
 // ── GET /api/servers ─────────────────────────────────────────
-// List all servers for the logged-in user
+// List every server the logged-in user is a member of (owned or shared)
 router.get('/', async (req, res) => {
+  const { data: memberships, error: memError } = await supabase
+    .from('server_members')
+    .select('server_id, role')
+    .eq('user_id', req.user.id)
+
+  if (memError) {
+    logger.error({ err: memError }, 'Fetch memberships error')
+    return res.status(500).json({ error: 'Failed to fetch servers' })
+  }
+
+  if (!memberships || memberships.length === 0) return res.json({ servers: [] })
+
+  const roleByServerId = new Map(memberships.map((m) => [m.server_id, m.role]))
+
   const { data, error } = await supabase
     .from('servers')
     .select('id, name, ip, agent_connected, last_seen_at, alert_webhook_url, alert_cpu_threshold, created_at')
-    .eq('user_id', req.user.id)
+    .in('id', [...roleByServerId.keys()])
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -49,7 +66,7 @@ router.get('/', async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch servers' })
   }
 
-  res.json({ servers: data })
+  res.json({ servers: data.map((s) => ({ ...s, role: roleByServerId.get(s.id) })) })
 })
 
 // ── POST /api/servers ────────────────────────────────────────
@@ -97,6 +114,16 @@ router.post('/', validateBody(createServerSchema), async (req, res) => {
     return res.status(500).json({ error: 'Failed to generate agent credentials' })
   }
 
+  const { error: memberError } = await supabase
+    .from('server_members')
+    .insert({ server_id: server.id, user_id: req.user.id, role: 'owner' })
+
+  if (memberError) {
+    logger.error({ err: memberError, serverId: server.id }, 'Failed to create owner membership')
+    await supabase.from('servers').delete().eq('id', server.id)
+    return res.status(500).json({ error: 'Failed to create server' })
+  }
+
   auditLog({ req, action: 'server:create', target: server.id })
 
   let dockerCommand
@@ -123,28 +150,31 @@ router.post('/', validateBody(createServerSchema), async (req, res) => {
 // ── GET /api/servers/:id ─────────────────────────────────────
 // Basic server info — no credentials
 router.get('/:id', async (req, res) => {
+  const membership = await requireRole(req, res, req.params.id, 'viewer')
+  if (!membership) return
+
   const { data, error } = await supabase
     .from('servers')
     .select('id, name, ip, agent_connected, last_seen_at, alert_webhook_url, alert_cpu_threshold, created_at')
     .eq('id', req.params.id)
-    .eq('user_id', req.user.id) // ownership check
     .single()
 
   if (error || !data) {
     return res.status(404).json({ error: 'Server not found' })
   }
 
-  res.json({ server: data })
+  res.json({ server: { ...data, role: membership.role } })
 })
 
 // ── GET /api/servers/:id/credentials ─────────────────────────
 // Decrypt and return agentKey + docker command — owner only
 router.get('/:id/credentials', async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
+
   const { data, error } = await supabase
     .from('servers')
     .select('id, name, ip, agent_key_encrypted, agent_secret_encrypted')
     .eq('id', req.params.id)
-    .eq('user_id', req.user.id)   // ownership enforced here
     .single()
 
   if (error || !data) {
@@ -193,14 +223,7 @@ router.patch('/:id', validateBody(updateServerSchema), async (req, res) => {
   if (alertWebhookUrl !== undefined) updates.alert_webhook_url = alertWebhookUrl || null
   if (alertCpuThreshold !== undefined) updates.alert_cpu_threshold = alertCpuThreshold
 
-  const { data: existing } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .single()
-
-  if (!existing) return res.status(404).json({ error: 'Server not found' })
+  if (!(await requireRole(req, res, req.params.id, 'operator'))) return
 
   const { data, error } = await supabase
     .from('servers')
@@ -217,14 +240,7 @@ router.patch('/:id', validateBody(updateServerSchema), async (req, res) => {
 
 // ── DELETE /api/servers/:id ──────────────────────────────────
 router.delete('/:id', async (req, res) => {
-  const { data: existing } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .single()
-
-  if (!existing) return res.status(404).json({ error: 'Server not found' })
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
 
   const { error } = await supabase
     .from('servers')
@@ -240,14 +256,7 @@ router.delete('/:id', async (req, res) => {
 // ── POST /api/servers/:id/regenerate-key ─────────────────────
 // Issues new agentKey + agentSecret, replaces all stored values
 router.post('/:id/regenerate-key', async (req, res) => {
-  const { data: existing } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .single()
-
-  if (!existing) return res.status(404).json({ error: 'Server not found' })
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
 
   const { agentKey, secret } = generateAgentCredentials(req.params.id)
   const agentSecret = randomBytes(32).toString('hex')
@@ -301,14 +310,7 @@ const METRICS_RANGE_MS = {
 router.get('/:id/metrics', async (req, res) => {
   const range = METRICS_RANGE_MS[req.query.range] ? req.query.range : '1h'
 
-  const { data: existing } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .single()
-
-  if (!existing) return res.status(404).json({ error: 'Server not found' })
+  if (!(await requireRole(req, res, req.params.id, 'viewer'))) return
 
   const since = new Date(Date.now() - METRICS_RANGE_MS[range]).toISOString()
 
@@ -332,14 +334,7 @@ router.get('/:id/metrics', async (req, res) => {
 router.get('/:id/events', async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200)
 
-  const { data: existing } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .single()
-
-  if (!existing) return res.status(404).json({ error: 'Server not found' })
+  if (!(await requireRole(req, res, req.params.id, 'viewer'))) return
 
   const { data, error } = await supabase
     .from('docker_events')
@@ -361,14 +356,7 @@ router.get('/:id/events', async (req, res) => {
 router.get('/:id/alerts', async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200)
 
-  const { data: existing } = await supabase
-    .from('servers')
-    .select('id')
-    .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
-    .single()
-
-  if (!existing) return res.status(404).json({ error: 'Server not found' })
+  if (!(await requireRole(req, res, req.params.id, 'viewer'))) return
 
   const { data, error } = await supabase
     .from('alert_events')
@@ -390,11 +378,12 @@ router.get('/:id/alerts', async (req, res) => {
 const UPTIME_WINDOW_DAYS = 30
 
 router.get('/:id/uptime', async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'viewer'))) return
+
   const { data: server } = await supabase
     .from('servers')
     .select('id, agent_connected, created_at')
     .eq('id', req.params.id)
-    .eq('user_id', req.user.id)
     .single()
 
   if (!server) return res.status(404).json({ error: 'Server not found' })
@@ -449,5 +438,236 @@ router.get('/:id/uptime', async (req, res) => {
     currentlyConnected: server.agent_connected,
   })
 })
+
+// ── Saved Compose stacks (metadata store — deploy/down/list happens ─
+// live through the agent; this is just so redeploys don't require
+// re-pasting the YAML) ────────────────────────────────────────────
+
+// ── GET /api/servers/:id/stacks ──────────────────────────────
+router.get('/:id/stacks', async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'viewer'))) return
+
+  const { data, error } = await supabase
+    .from('stacks')
+    .select('id, name, compose_yaml, created_at, updated_at')
+    .eq('server_id', req.params.id)
+    .order('name', { ascending: true })
+
+  if (error) {
+    logger.error({ err: error }, 'Fetch stacks error')
+    return res.status(500).json({ error: 'Failed to fetch stacks' })
+  }
+
+  res.json({ stacks: data })
+})
+
+// ── POST /api/servers/:id/stacks ─────────────────────────────
+// Upsert by (server_id, name) — saving a stack with an existing name
+// just updates its stored compose file.
+router.post('/:id/stacks', validateBody(createStackSchema), async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'operator'))) return
+
+  const { name, composeYaml } = req.body
+  const { data, error } = await supabase
+    .from('stacks')
+    .upsert(
+      { server_id: req.params.id, name, compose_yaml: composeYaml, updated_at: new Date().toISOString() },
+      { onConflict: 'server_id,name' },
+    )
+    .select('id, name, compose_yaml, created_at, updated_at')
+    .single()
+
+  if (error) {
+    logger.error({ err: error }, 'Save stack error')
+    return res.status(500).json({ error: 'Failed to save stack' })
+  }
+
+  auditLog({ req, action: 'stacks:save', target: name, serverId: req.params.id })
+  res.status(201).json({ stack: data })
+})
+
+// ── PATCH /api/servers/:id/stacks/:stackId ───────────────────
+router.patch('/:id/stacks/:stackId', validateBody(updateStackSchema), async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'operator'))) return
+
+  const { data, error } = await supabase
+    .from('stacks')
+    .update({ compose_yaml: req.body.composeYaml, updated_at: new Date().toISOString() })
+    .eq('id', req.params.stackId)
+    .eq('server_id', req.params.id)
+    .select('id, name, compose_yaml, created_at, updated_at')
+    .single()
+
+  if (error || !data) return res.status(404).json({ error: 'Stack not found' })
+
+  auditLog({ req, action: 'stacks:update', target: data.name, serverId: req.params.id })
+  res.json({ stack: data })
+})
+
+// ── DELETE /api/servers/:id/stacks/:stackId ───────────────────
+// Only removes the saved YAML — does not stop/remove a running stack.
+router.delete('/:id/stacks/:stackId', async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
+
+  const { data, error } = await supabase
+    .from('stacks')
+    .delete()
+    .eq('id', req.params.stackId)
+    .eq('server_id', req.params.id)
+    .select('name')
+    .single()
+
+  if (error || !data) return res.status(404).json({ error: 'Stack not found' })
+
+  auditLog({ req, action: 'stacks:delete', target: data.name, serverId: req.params.id })
+  res.status(204).end()
+})
+
+// ── Team members (RBAC) ────────────────────────────────────────
+
+// ── GET /api/servers/:id/members ─────────────────────────────
+router.get('/:id/members', async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'viewer'))) return
+
+  const { data: members, error } = await supabase
+    .from('server_members')
+    .select('user_id, role, created_at')
+    .eq('server_id', req.params.id)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    logger.error({ err: error }, 'Fetch members error')
+    return res.status(500).json({ error: 'Failed to fetch members' })
+  }
+
+  // Two queries instead of a PostgREST embed — server_members has two FKs
+  // into profiles (user_id, invited_by), which makes embedding ambiguous.
+  const { data: profiles } = await supabase
+    .from('profiles')
+    .select('id, name, email')
+    .in('id', members.map((m) => m.user_id))
+
+  const profileById = new Map((profiles ?? []).map((p) => [p.id, p]))
+
+  res.json({
+    members: members.map((m) => ({
+      userId: m.user_id,
+      role: m.role,
+      name: profileById.get(m.user_id)?.name ?? null,
+      email: profileById.get(m.user_id)?.email ?? null,
+      addedAt: m.created_at,
+    })),
+  })
+})
+
+// ── POST /api/servers/:id/members ────────────────────────────
+// Invite an existing registered user by email. Owner-only.
+router.post('/:id/members', validateBody(inviteMemberSchema), async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
+
+  const { email, role } = req.body
+
+  const { data: invitedUser } = await supabase
+    .from('profiles')
+    .select('id, name, email')
+    .ilike('email', email)
+    .maybeSingle()
+
+  if (!invitedUser) {
+    return res.status(404).json({ error: 'No doco-pilot account found for that email — ask them to sign up first' })
+  }
+
+  const existingMembership = await getMembership(req.params.id, invitedUser.id)
+  if (existingMembership) {
+    return res.status(409).json({ error: 'That user already has access to this server' })
+  }
+
+  const { error: insertError } = await supabase
+    .from('server_members')
+    .insert({ server_id: req.params.id, user_id: invitedUser.id, role, invited_by: req.user.id })
+
+  if (insertError) {
+    logger.error({ err: insertError }, 'Invite member error')
+    return res.status(500).json({ error: 'Failed to add member' })
+  }
+
+  invalidateServerMemberCache(req.params.id)
+
+  const { data: server } = await supabase.from('servers').select('name').eq('id', req.params.id).single()
+
+  sendMail({
+    to: invitedUser.email,
+    subject: `You've been added to "${server?.name ?? 'a server'}" on doco-pilot`,
+    html: memberInvitedEmail({ serverName: server?.name ?? 'a server', role, inviterName: req.user.name ?? req.user.email }),
+  }).catch((err) => logger.error({ err }, 'Failed to send member-invited email'))
+
+  auditLog({ req, action: 'members:invite', target: invitedUser.email, serverId: req.params.id })
+  res.status(201).json({ member: { userId: invitedUser.id, role, name: invitedUser.name, email: invitedUser.email } })
+})
+
+// ── PATCH /api/servers/:id/members/:userId ───────────────────
+router.patch('/:id/members/:userId', validateBody(updateMemberSchema), async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
+
+  if (req.body.role !== 'owner') {
+    const blocked = await wouldRemoveLastOwner(req.params.id, req.params.userId)
+    if (blocked) return res.status(400).json({ error: 'A server must have at least one owner' })
+  }
+
+  const { data, error } = await supabase
+    .from('server_members')
+    .update({ role: req.body.role })
+    .eq('server_id', req.params.id)
+    .eq('user_id', req.params.userId)
+    .select('user_id, role')
+    .single()
+
+  if (error || !data) return res.status(404).json({ error: 'Member not found' })
+
+  invalidateServerMemberCache(req.params.id)
+  auditLog({ req, action: 'members:update-role', target: req.params.userId, serverId: req.params.id })
+  res.json({ member: { userId: data.user_id, role: data.role } })
+})
+
+// ── DELETE /api/servers/:id/members/:userId ──────────────────
+router.delete('/:id/members/:userId', async (req, res) => {
+  if (!(await requireRole(req, res, req.params.id, 'owner'))) return
+
+  const blocked = await wouldRemoveLastOwner(req.params.id, req.params.userId)
+  if (blocked) return res.status(400).json({ error: 'A server must have at least one owner' })
+
+  const { error } = await supabase
+    .from('server_members')
+    .delete()
+    .eq('server_id', req.params.id)
+    .eq('user_id', req.params.userId)
+
+  if (error) return res.status(500).json({ error: 'Failed to remove member' })
+
+  invalidateServerMemberCache(req.params.id)
+  auditLog({ req, action: 'members:remove', target: req.params.userId, serverId: req.params.id })
+  res.status(204).end()
+})
+
+// True if changing/removing this member's role would leave the server
+// with zero owners.
+async function wouldRemoveLastOwner(serverId, userId) {
+  const { data: member } = await supabase
+    .from('server_members')
+    .select('role')
+    .eq('server_id', serverId)
+    .eq('user_id', userId)
+    .single()
+
+  if (member?.role !== 'owner') return false
+
+  const { count } = await supabase
+    .from('server_members')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('server_id', serverId)
+    .eq('role', 'owner')
+
+  return (count ?? 0) <= 1
+}
 
 export default router

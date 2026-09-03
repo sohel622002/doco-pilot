@@ -18,13 +18,18 @@ import {
   RefreshCw,
   Square,
   Trash2,
+  TerminalSquare,
 } from "lucide-react";
 import Spinner from "../components/Spinner";
 import LogsModal from "../components/LogsModal";
 import InspectModal from "../components/InspectModal";
+import ExecModal from "../components/ExecModal";
 import DeployContainerModal from "../components/DeployContainerModal";
 import { useLogsStore } from "../store/logs";
 import { useInspectStore } from "../store/inspect";
+import { useExecStore } from "../store/exec";
+import { useServers } from "../hooks/useServers";
+import { canWrite } from "../lib/roles";
 import { Card, Badge, Button } from "../components/ui";
 
 const STATS_POLL_MS = 5000;
@@ -65,6 +70,8 @@ export default function Containers() {
   const { serverId } = useParams();
   const { sendMessage, isConnected } = useWebSocket();
   const [deployOpen, setDeployOpen] = useState(false);
+  const { data: serversData } = useServers();
+  const write = canWrite(serversData?.servers?.find((s) => s.id === serverId)?.role);
   const containers = useContainerStore((state) => state.containers);
   const runningContainers = useContainerStore(
     (state) => state.containers.filter((c) => c.state === "running").length,
@@ -118,6 +125,12 @@ export default function Containers() {
     sendMessage({ action: WS_ACTIONS.CONTAINER_INSPECT, containerId, serverId });
   };
 
+  const handleExec = (containerId, name) => {
+    const sessionId =
+      globalThis.crypto?.randomUUID?.() ?? `${containerId}-${Date.now()}`;
+    useExecStore.getState().openFor(containerId, name, sessionId);
+  };
+
   const handleRemoveContainer = (containerId, name) => {
     if (!window.confirm(`Permanently remove container "${name}"? This cannot be undone.`)) {
       return;
@@ -168,7 +181,7 @@ export default function Containers() {
             <Layers size={14} />
             Stack: All
           </button>
-          <Button onClick={() => setDeployOpen(true)}>Deploy Container</Button>
+          {write && <Button onClick={() => setDeployOpen(true)}>Deploy Container</Button>}
         </div>
       </div>
       {containers && containers.length > 0 && (
@@ -351,8 +364,8 @@ export default function Containers() {
                       <td className="px-space-md py-space-md text-right">
                         <div className="flex items-center justify-end gap-space-xs transition-opacity">
                           <button
-                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"
-                            disabled={container?.process}
+                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant disabled:opacity-40"
+                            disabled={!write || container?.process}
                             title={
                               container?.state === "running"
                                 ? "Stop"
@@ -384,8 +397,9 @@ export default function Containers() {
                           </button>
                           <button
                             title="Pause"
-                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"
+                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant disabled:opacity-40"
                             disabled={
+                              !write ||
                               container?.process ||
                               container?.state === "paused" ||
                               container?.state === "exited"
@@ -412,8 +426,8 @@ export default function Containers() {
                             <Square size={18} />
                           </button> */}
                           <button
-                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant"
-                            disabled={container?.process}
+                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant disabled:opacity-40"
+                            disabled={!write || container?.process}
                             onClick={() =>
                               handleContrinerAction(
                                 WS_ACTIONS.CONTAINER_RESTART,
@@ -422,6 +436,20 @@ export default function Containers() {
                             }
                           >
                             <RefreshCw size={18} />
+                          </button>
+                          <button
+                            title={
+                              !write
+                                ? "Viewers can't open a shell"
+                                : container?.state === "running"
+                                  ? "Open Shell"
+                                  : "Start the container to open a shell"
+                            }
+                            disabled={!write || container?.state !== "running"}
+                            className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant disabled:opacity-40 disabled:hover:bg-transparent"
+                            onClick={() => handleExec(container?.shortId, container?.names[0])}
+                          >
+                            <TerminalSquare size={18} />
                           </button>
                           <button
                             title="Inspect"
@@ -440,7 +468,7 @@ export default function Containers() {
                           <button
                             title="Remove"
                             className="p-1 hover:bg-surface-container-high rounded text-on-surface-variant hover:text-error disabled:opacity-40"
-                            disabled={container?.state === "running"}
+                            disabled={!write || container?.state === "running"}
                             onClick={() =>
                               handleRemoveContainer(container?.shortId, container?.names[0])
                             }
@@ -459,6 +487,7 @@ export default function Containers() {
       )}
       <LogsModal />
       <InspectModal />
+      <ExecModal />
       <DeployContainerModal
         serverId={serverId}
         open={deployOpen}

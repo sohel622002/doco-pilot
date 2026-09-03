@@ -47,5 +47,32 @@ export const WS_ACTIONS = {
     SYSTEM_STATS_RESULT : 'system:stats:result',
     DOCKER_EVENT : 'docker:event',
     AGENT_ONLINE : 'agent:online',
-    AGENT_OFFLINE : 'agent:offline'
+    AGENT_OFFLINE : 'agent:offline',
+    // Interactive exec (shell-in-container)
+    CONTAINER_EXEC_START : 'containers:exec:start',
+    CONTAINER_EXEC_INPUT : 'containers:exec:input',
+    CONTAINER_EXEC_RESIZE : 'containers:exec:resize',
+    CONTAINER_EXEC_STOP : 'containers:exec:stop',
+    CONTAINER_EXEC_READY : 'containers:exec:ready',
+    CONTAINER_EXEC_DATA : 'containers:exec:data',
+    CONTAINER_EXEC_EXIT : 'containers:exec:exit',
+    CONTAINER_EXEC_ERROR : 'containers:exec:error',
+    // Image build
+    IMAGES_BUILD_START : 'images:build:start',
+    IMAGES_BUILD_LOG : 'images:build:log',
+    IMAGES_BUILD_DONE : 'images:build:done',
+    // Compose stacks
+    STACKS_LIST : 'stacks:list',
+    STACKS_LIST_RESULT : 'stacks:list:result',
+    STACKS_DEPLOY_START : 'stacks:deploy:start',
+    STACKS_DEPLOY_LOG : 'stacks:deploy:log',
+    STACKS_DEPLOY_DONE : 'stacks:deploy:done',
+    STACKS_DOWN_START : 'stacks:down:start',
+    STACKS_DOWN_LOG : 'stacks:down:log',
+    STACKS_DOWN_DONE : 'stacks:down:done',
+    // Engine info & aggregated logs
+    SYSTEM_ENGINE_INFO : 'system:engineInfo',
+    SYSTEM_ENGINE_INFO_RESULT : 'system:engineInfo:result',
+    SYSTEM_LOGS_TAIL : 'system:logsTail',
+    SYSTEM_LOGS_TAIL_RESULT : 'system:logsTail:result',
 }

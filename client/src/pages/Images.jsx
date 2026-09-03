@@ -2,11 +2,15 @@ import { useParams } from "react-router-dom";
 import { useWebSocket } from "../context/WebSocketContext";
 import { useImageStore } from "../store/image";
 import { useDiskUsageStore } from "../store/diskUsage";
+import { useImageBuildStore } from "../store/imageBuild";
 import { useEffect, useState } from "react";
 import { WS_ACTIONS } from "../lib/actions";
 import { formatBytes, timeAgo } from "../lib/utils";
-import { Trash2, Download, Sparkles, FileText } from "lucide-react";
+import { Trash2, Download, Sparkles, FileText, Hammer } from "lucide-react";
 import { Card, Badge, Button } from "../components/ui";
+import BuildImageModal from "../components/BuildImageModal";
+import { useServers } from "../hooks/useServers";
+import { canWrite } from "../lib/roles";
 
 function parseImageTag(tags) {
   const raw = Array.isArray(tags) && tags.length > 0 ? tags[0] : null;
@@ -32,6 +36,9 @@ export default function Images() {
   const [pullValue, setPullValue] = useState("");
   const [pulling, setPulling] = useState(false);
   const [pruning, setPruning] = useState(false);
+  const [buildOpen, setBuildOpen] = useState(false);
+  const { data: serversData } = useServers();
+  const write = canWrite(serversData?.servers?.find((s) => s.id === serverId)?.role);
 
   const refreshImages = () => sendMessage({ action: WS_ACTIONS.IMAGES_LIST, serverId });
   const refreshDiskUsage = () => {
@@ -51,7 +58,11 @@ export default function Images() {
       refreshDiskUsage();
     };
     window.addEventListener("images:pruned", handler);
-    return () => window.removeEventListener("images:pruned", handler);
+    window.addEventListener("images:built", handler);
+    return () => {
+      window.removeEventListener("images:pruned", handler);
+      window.removeEventListener("images:built", handler);
+    };
   }, [serverId]);
 
   const handlePrune = () => {
@@ -98,13 +109,25 @@ export default function Images() {
             value={pullValue}
             onChange={(e) => setPullValue(e.target.value)}
           />
-          <Button type="submit" disabled={pulling}>
+          <Button type="submit" disabled={!write || pulling}>
             <Download size={16} />
             {pulling ? "Pulling…" : "Pull Image"}
           </Button>
           <button
             type="button"
-            disabled={pruning || danglingImages.length === 0}
+            disabled={!write}
+            onClick={() => {
+              useImageBuildStore.getState().openModal();
+              setBuildOpen(true);
+            }}
+            className="flex items-center gap-space-xs h-9 px-space-md rounded-md border border-outline-variant text-on-surface text-[13px] font-medium hover:bg-surface-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+          >
+            <Hammer size={15} />
+            Build Image
+          </button>
+          <button
+            type="button"
+            disabled={!write || pruning || danglingImages.length === 0}
             onClick={handlePrune}
             title={
               danglingImages.length === 0
@@ -259,7 +282,8 @@ export default function Images() {
                       <td className="px-space-md py-space-md text-right">
                         <button
                           title="Remove Image"
-                          className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                          className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+                          disabled={!write}
                           onClick={() => handleRemove(image?.id)}
                         >
                           <Trash2 size={16} />
@@ -272,6 +296,13 @@ export default function Images() {
           </table>
         </div>
       </div>
+      <BuildImageModal
+        open={buildOpen}
+        onClose={() => {
+          setBuildOpen(false);
+          useImageBuildStore.getState().close();
+        }}
+      />
     </div>
   );
 }

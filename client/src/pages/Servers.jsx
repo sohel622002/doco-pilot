@@ -5,6 +5,7 @@ import { useServers } from "../hooks/useServers";
 import api from "../lib/axios";
 import { Plus, Server as ServerIcon, Trash2, Copy, Check, Filter } from "lucide-react";
 import { Card, Badge, Button } from "../components/ui";
+import { isOwner } from "../lib/roles";
 
 const HEALTH_META = {
   ok: { label: "OK", dot: "bg-[#5fd696]", tone: "success" },
@@ -243,16 +244,23 @@ export default function Servers() {
                       <span className={`h-1.5 w-1.5 rounded-full ${HEALTH_META[health].dot}`}></span>
                       {HEALTH_META[health].label}
                     </Badge>
-                    <button
-                      title="Delete server"
-                      className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(server.id);
-                      }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {server.role && !isOwner(server.role) && (
+                      <Badge tone="neutral" title="Shared with you">
+                        {server.role}
+                      </Badge>
+                    )}
+                    {isOwner(server.role) && (
+                      <button
+                        title="Delete server"
+                        className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(server.id);
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
 

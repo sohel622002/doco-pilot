@@ -38,7 +38,7 @@ This "thin relay, agent does the work" design is doco-pilot's core architectural
 
 | Area | Feature |
 |---|---|
-| **Auth** | Email/password, Google OAuth, JWT sessions with IP-bound access tokens + rotating refresh tokens, email verification, password reset, rate limiting |
+| **Auth** | Email/password, Google OAuth, JWT sessions with optional IP-bound access tokens (off by default — see note below) + rotating refresh tokens, email verification, password reset, rate limiting |
 | **Multi-server** | Add unlimited remote servers, each gets a generated agent install command with encrypted (AES-256-GCM) + hashed (bcrypt) credentials |
 | **Container management** | List/inspect/start/stop/pause/restart/remove/create, live logs |
 | **Live stats** | Per-container CPU/mem/net stats, host-level CPU/mem/disk/network via the agent |
@@ -51,6 +51,8 @@ This "thin relay, agent does the work" design is doco-pilot's core architectural
 | **Agent uptime tracking** | Rolling 30-day uptime % per server |
 | **Audit logging** | Server-side audit trail of actions |
 | **Security** | HMAC-signed agent handshake, TLS-verified WS connections, input validation via Zod, CORS lockdown |
+
+**Note on IP-bound JWTs:** kept opt-in (`BIND_JWT_TO_IP`, off by default) rather than enforced. Client and server are hosted on separate providers (Vercel/Render), so the client's egress IP isn't stable or known in advance — enforcing IP binding by default caused false "Token IP mismatch" logouts and was reverted. Don't market this as an always-on guarantee.
 
 ## 3. Known limitations (from the codebase and the project's own self-audit)
 
@@ -105,7 +107,7 @@ Out of scope by design (not gaps, since doco-pilot doesn't attempt to be a deplo
 | Audit logging | ✅ | ✅ (Business) | Partial | ✅ |
 | Google OAuth login | ✅ | ❌ (native) | Via OIDC | Via OIDC |
 
-**Positioning:** doco-pilot currently sits closest to a **lightweight, security-conscious Docker fleet monitoring/management dashboard delivered as SaaS** — its architecture (encrypted agent credentials, HMAC handshake, IP-bound JWTs, dial-out-only agent) is more rigorous than what Portainer typically documents, but its management feature surface (exec, builds, RBAC, API) is smaller. Its true competitive set is **Portainer**, not Coolify/Dokploy — those two solve "deploy my app," while doco-pilot solves "show me and let me control what's already running on my VPS."
+**Positioning:** doco-pilot currently sits closest to a **lightweight, security-conscious Docker fleet monitoring/management dashboard delivered as SaaS** — its architecture (encrypted agent credentials, HMAC handshake, optional IP-bound JWTs, dial-out-only agent) is more rigorous than what Portainer typically documents, but its management feature surface (exec, builds, RBAC, API) is smaller. Its true competitive set is **Portainer**, not Coolify/Dokploy — those two solve "deploy my app," while doco-pilot solves "show me and let me control what's already running on my VPS."
 
 ## 5. A note on category and deployment model
 

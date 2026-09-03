@@ -15,7 +15,15 @@ import {
   validateNetworkId,
   validateNetworkDriver,
   validateCidrOrIp,
+  validateSessionId,
+  validateExecDimension,
+  validateExecInput,
+  validateDockerfileText,
+  validateBuildArgs,
+  validateStackName,
+  validateComposeYaml,
 } from "../utils/audit.js";
+import { getMembership } from "../utils/membership.js";
 import cookie from 'cookie';
 import { logger } from "../utils/logger.js";
 import { sendWebhook } from "../utils/webhook.js";
@@ -83,7 +91,75 @@ const ALLOWED_ACTIONS = new Set([
   "networks:inspect",
   "networks:create",
   "networks:remove",
+  "containers:exec:start",
+  "containers:exec:input",
+  "containers:exec:resize",
+  "containers:exec:stop",
+  "images:build:start",
+  "stacks:list",
+  "stacks:deploy:start",
+  "stacks:down:start",
+  "system:engineInfo",
+  "system:logsTail",
 ]);
+
+// Exec input/resize fire on every keystroke/window-resize — exempt them from
+// the per-minute mutation rate limit (still gated by ownership + agent-online
+// checks below), or a terminal session would get throttled mid-typing.
+const EXEC_STREAM_ACTIONS = new Set([
+  "containers:exec:input",
+  "containers:exec:resize",
+]);
+
+// Actions a 'viewer' role may send — everything else needs operator/owner.
+// Exec, build, and deploy are excluded even though they're read-adjacent in
+// name (e.g. logs) because exec/deploy grant effective code execution.
+const VIEWER_ALLOWED_ACTIONS = new Set([
+  "containers:list",
+  "containers:inspect",
+  "containers:logs",
+  "containers:stats",
+  "system:stats",
+  "images:list",
+  "images:dangling",
+  "system:diskUsage",
+  "volumes:list",
+  "volumes:inspect",
+  "networks:list",
+  "networks:inspect",
+  "stacks:list",
+  "system:engineInfo",
+  "system:logsTail",
+]);
+
+// Short-lived cache of each server's member user_ids — docker events can
+// arrive multiple times a second, so this avoids a DB round trip per event.
+// Worst case, a just-added/removed member is a few seconds stale; the
+// owner (always present from server creation) is unaffected.
+const MEMBER_CACHE_MS = 30 * 1000;
+const memberIdsCache = new Map(); // serverId → { userIds, fetchedAt }
+
+async function getServerMemberIds(serverId) {
+  const cached = memberIdsCache.get(serverId);
+  if (cached && Date.now() - cached.fetchedAt < MEMBER_CACHE_MS) return cached.userIds;
+
+  const { data, error } = await supabase.from("server_members").select("user_id").eq("server_id", serverId);
+  if (error) {
+    logger.error({ err: error, serverId }, "Failed to fetch server members for broadcast");
+    return cached?.userIds ?? [];
+  }
+
+  const userIds = data.map((m) => m.user_id);
+  memberIdsCache.set(serverId, { userIds, fetchedAt: Date.now() });
+  return userIds;
+}
+
+// Broadcast to every member of a server (owner + operators + viewers),
+// not just the original creator — replaces the old owner-only broadcast.
+async function broadcastToServerMembers(serverId, data) {
+  const userIds = await getServerMemberIds(serverId);
+  for (const userId of userIds) broadcastToUser(userId, data);
+}
 
 export function setupWebSocket(server) {
   const wss = new WebSocketServer({ server, path: "/ws" });
@@ -160,8 +236,8 @@ async function handleAgentConnection(ws, url, req) {
 
   await supabase.from("agent_status_events").insert({ server_id: server.id, connected: true });
 
-  // Notify user's frontend that their agent is online
-  broadcastToUser(server.user_id, {
+  // Notify every member's frontend that their agent is online
+  broadcastToServerMembers(server.id, {
     type: "agent:online",
     serverId: server.id,
   });
@@ -183,8 +259,8 @@ async function handleAgentConnection(ws, url, req) {
     checkForAlert(server.id, msg);
     persistMetricsAndEvents(server.id, msg);
 
-    // Forward docker event to the correct user's frontend only
-    broadcastToUser(server.user_id, {
+    // Forward docker event to every member's frontend
+    broadcastToServerMembers(server.id, {
       ...msg,
       serverId: server.id,
     });
@@ -201,7 +277,7 @@ async function handleAgentConnection(ws, url, req) {
       .from("agent_status_events")
       .insert({ server_id: server.id, connected: false });
 
-    broadcastToUser(server.user_id, {
+    broadcastToServerMembers(server.id, {
       type: "agent:offline",
       serverId: server.id,
     });
@@ -271,22 +347,22 @@ function handleClientConnection(ws, url, req) {
 }
 
 async function sendCurrentAgentStatuses(userId, ws) {
-  // Fetch all servers belonging to this user
-  const { data: servers } = await supabase
-    .from("servers")
-    .select("id")
+  // Every server this user is a member of (owned or shared)
+  const { data: memberships } = await supabase
+    .from("server_members")
+    .select("server_id")
     .eq("user_id", userId);
 
-  if (!servers) return;
+  if (!memberships) return;
 
-  for (const server of servers) {
-    const agentWs = agentSockets.get(server.id);
+  for (const membership of memberships) {
+    const agentWs = agentSockets.get(membership.server_id);
     const isOnline = agentWs && agentWs.readyState === 1;
 
     // Send current real status — not what DB says, but what's actually connected
     ws.send(JSON.stringify({
       type:     isOnline ? "agent:online" : "agent:offline",
-      serverId: server.id
+      serverId: membership.server_id
     }));
   }
 }
@@ -310,10 +386,18 @@ async function handleClientCommand(user, msg, ws) {
     networkDriver,
     subnet,
     gateway,
+    sessionId,
+    cols,
+    rows,
+    data,
+    dockerfile,
+    buildArgs,
+    stackName,
+    composeYaml,
   } = msg;
 
-  // Rate limit per user
-  wsRateLimit(user.id);
+  // Rate limit per user (exempt high-frequency exec keystroke/resize traffic)
+  if (!EXEC_STREAM_ACTIONS.has(action)) wsRateLimit(user.id);
 
   // Validate action is in the allowed list
   if (!action || !ALLOWED_ACTIONS.has(action)) {
@@ -323,12 +407,18 @@ async function handleClientCommand(user, msg, ws) {
   // Validate serverId present
   if (!serverId) return sendError(ws, "Missing serverId");
 
-  // Ownership check — does this server belong to this user?
+  // Membership check — is this user a member of this server, and with a
+  // role that permits this action? Replaces the old owner-only check.
+  const membership = await getMembership(serverId, user.id);
+  if (!membership) return sendError(ws, "Server not found or access denied");
+  if (membership.role === "viewer" && !VIEWER_ALLOWED_ACTIONS.has(action)) {
+    return sendError(ws, "Insufficient permissions for this action");
+  }
+
   const { data: server } = await supabase
     .from("servers")
     .select("id, agent_connected")
     .eq("id", serverId)
-    .eq("user_id", user.id) // CRITICAL: ownership
     .single();
 
   if (!server) return sendError(ws, "Server not found or access denied");
@@ -354,17 +444,28 @@ async function handleClientCommand(user, msg, ws) {
   if (networkDriver) payload.networkDriver = validateNetworkDriver(networkDriver);
   if (subnet) payload.subnet = validateCidrOrIp(subnet);
   if (gateway) payload.gateway = validateCidrOrIp(gateway);
+  if (sessionId) payload.sessionId = validateSessionId(sessionId);
+  if (cols !== undefined) payload.cols = validateExecDimension(cols);
+  if (rows !== undefined) payload.rows = validateExecDimension(rows);
+  if (data !== undefined) payload.data = validateExecInput(data);
+  if (dockerfile !== undefined) payload.dockerfile = validateDockerfileText(dockerfile);
+  if (buildArgs !== undefined) payload.buildArgs = validateBuildArgs(buildArgs);
+  if (stackName) payload.stackName = validateStackName(stackName);
+  if (composeYaml !== undefined) payload.composeYaml = validateComposeYaml(composeYaml);
 
   // Sign message before forwarding to agent
   agentWs.send(JSON.stringify(payload));
 
-  // Audit log every action
-  auditLog({
-    req: { user, ip: null },
-    action,
-    target: containerId ?? imageId ?? volumeName ?? networkId ?? "n/a",
-    serverId,
-  });
+  // Audit log every action except high-frequency exec keystroke/resize traffic
+  // (an exec session's start/stop is still logged — that's the meaningful event)
+  if (!EXEC_STREAM_ACTIONS.has(action)) {
+    auditLog({
+      req: { user, ip: null },
+      action,
+      target: containerId ?? imageId ?? volumeName ?? networkId ?? "n/a",
+      serverId,
+    });
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -529,5 +630,11 @@ function verifyHandshakeSig(agentKey, ts, sig) {
   verifyAgentHandshake(agentKey, ts, sig, agentKey);
 }
 
+// Called by the REST routes after a membership change so a newly
+// invited/removed member doesn't wait out the cache TTL for live updates.
+export function invalidateServerMemberCache(serverId) {
+  memberIdsCache.delete(serverId);
+}
+
 // Export for testing
-export { agentSockets, clientSockets, broadcastToUser };
+export { agentSockets, clientSockets, broadcastToUser, ALLOWED_ACTIONS, VIEWER_ALLOWED_ACTIONS, EXEC_STREAM_ACTIONS, checkForAlert };
