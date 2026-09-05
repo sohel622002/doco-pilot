@@ -99,7 +99,8 @@ export default function Layout() {
           to="/servers"
           className="flex items-center gap-space-xs px-space-xs mb-space-lg hover:opacity-80 transition-opacity"
         >
-          <span className="logo text-3xl">DocoPilot</span>
+          <img src="/doco-pilot-logo.svg" alt="DocoPilot" className="h-8 w-8" />
+          <span className="font-semibold text-lg">DocoPilot</span>
         </NavLink>
 
         <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider px-space-xs mb-space-sm">
