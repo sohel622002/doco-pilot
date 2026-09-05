@@ -8,6 +8,7 @@ export default defineConfig({
     pool: 'forks',
     poolOptions: {
       forks: { singleFork: true }
-    }
+    },
+    setupFiles: ['./tests/setup.ts']
   }
 })
