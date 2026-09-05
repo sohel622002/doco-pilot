@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { randomBytes } from 'crypto'
 import {
   signAccessToken,
-  signRefreshToken,
+  generateRefreshToken,
   setAuthCookies,
   clearAuthCookies,
   hashPassword,
@@ -48,12 +48,13 @@ router.post('/register', authLimiter, validateBody(registerSchema), async (req, 
     }
 
     const accessToken = signAccessToken(user, req.ip)
-    const refreshToken = signRefreshToken()
-    const refreshTokenHash = await hashToken(refreshToken)
+    const { selector, verifier, cookieValue } = generateRefreshToken()
+    const verifierHash = await hashToken(verifier)
 
-    await tokens.insertRefreshToken(user.id, refreshTokenHash, new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString())
+    await tokens.insertRefreshToken(user.id, selector, verifierHash, new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString())
+    tokens.deleteExpiredRefreshTokens().catch(() => {})
 
-    setAuthCookies(res, accessToken, refreshToken)
+    setAuthCookies(res, accessToken, cookieValue)
 
     // Fire-and-forget: don't block the response on email delivery
     sendVerificationEmail(user.id, normalizedEmail).catch((err) =>

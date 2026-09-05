@@ -1,6 +1,6 @@
 import type { Response } from 'express'
 import { randomBytes } from 'crypto'
-import { signAccessToken, signRefreshToken, setAuthCookies, hashToken } from '../../utils/auth.js'
+import { signAccessToken, generateRefreshToken, setAuthCookies, hashToken } from '../../utils/auth.js'
 import { sendMail, verificationEmail } from '../../services/mailService.js'
 import * as tokens from '../../repositories/authTokenRepository.js'
 import { env } from '../../env.js'
@@ -12,12 +12,13 @@ export const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
 export async function issueSession(res: Response, user: { id: string; email: string }, ip?: string) {
   const payload = { id: user.id, email: user.email }
   const accessToken = signAccessToken(payload, ip)
-  const refreshToken = signRefreshToken()
-  const refreshTokenHash = await hashToken(refreshToken)
+  const { selector, verifier, cookieValue } = generateRefreshToken()
+  const verifierHash = await hashToken(verifier)
 
-  await tokens.insertRefreshToken(user.id, refreshTokenHash, new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString())
+  await tokens.insertRefreshToken(user.id, selector, verifierHash, new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString())
+  tokens.deleteExpiredRefreshTokens().catch(() => {})
 
-  setAuthCookies(res, accessToken, refreshToken)
+  setAuthCookies(res, accessToken, cookieValue)
   return payload
 }
 

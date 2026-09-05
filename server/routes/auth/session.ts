@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { signAccessToken, signRefreshToken, setAuthCookies, clearAuthCookies, hashToken, compareToken } from '../../utils/auth.js'
+import { signAccessToken, generateRefreshToken, setAuthCookies, clearAuthCookies, hashToken, compareToken } from '../../utils/auth.js'
 import { requireAuth } from '../../middleware/auth.js'
 import * as profiles from '../../repositories/profileRepository.js'
 import * as tokens from '../../repositories/authTokenRepository.js'
@@ -9,31 +9,18 @@ const router = Router()
 
 // ── POST /api/auth/refresh ───────────────────────────────────
 router.post('/refresh', async (req, res) => {
-  const incomingToken = req.cookies?.refresh_token
+  const incomingToken: string | undefined = req.cookies?.refresh_token
+  const [selector, verifier] = incomingToken?.split('.') ?? []
 
-  if (!incomingToken) {
+  if (!selector || !verifier) {
     return res.status(401).json({ error: 'No refresh token' })
   }
 
-  // Find all non-expired refresh tokens and compare
-  // (we don't store plain token so we must scan recent ones)
-  const { data: activeTokens } = await tokens.listActiveRefreshTokens()
+  // Indexed lookup by selector instead of scanning + bcrypt-comparing every
+  // active token in the table.
+  const { data: matchedToken } = await tokens.findActiveRefreshTokenBySelector(selector)
 
-  if (!activeTokens || activeTokens.length === 0) {
-    clearAuthCookies(res)
-    return res.status(401).json({ error: 'Invalid refresh token' })
-  }
-
-  // Find matching token
-  let matchedToken = null
-  for (const t of activeTokens) {
-    if (await compareToken(incomingToken, t.token_hash)) {
-      matchedToken = t
-      break
-    }
-  }
-
-  if (!matchedToken) {
+  if (!matchedToken || !(await compareToken(verifier, matchedToken.token_hash))) {
     clearAuthCookies(res)
     return res.status(401).json({ error: 'Invalid refresh token' })
   }
@@ -50,11 +37,12 @@ router.post('/refresh', async (req, res) => {
 
   const user = { id: profile.id, email: profile.email }
   const newAccessToken = signAccessToken(user, req.ip)
-  const newRefreshToken = signRefreshToken()
-  const newRefreshTokenHash = await hashToken(newRefreshToken)
+  const { selector: newSelector, verifier: newVerifier, cookieValue: newRefreshToken } = generateRefreshToken()
+  const newVerifierHash = await hashToken(newVerifier)
 
   const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString()
-  await tokens.insertRefreshToken(user.id, newRefreshTokenHash, expiresAt)
+  await tokens.insertRefreshToken(user.id, newSelector, newVerifierHash, expiresAt)
+  tokens.deleteExpiredRefreshTokens().catch(() => {})
 
   setAuthCookies(res, newAccessToken, newRefreshToken)
   res.json({ user: { id: user.id, email: user.email } })
@@ -62,16 +50,14 @@ router.post('/refresh', async (req, res) => {
 
 // ── POST /api/auth/logout ────────────────────────────────────
 router.post('/logout', requireAuth, async (req, res) => {
-  const incomingToken = req.cookies?.refresh_token
+  const incomingToken: string | undefined = req.cookies?.refresh_token
+  const [selector, verifier] = incomingToken?.split('.') ?? []
 
-  if (incomingToken) {
-    const { data: userTokens } = await tokens.listRefreshTokensForUser(req.user!.id)
+  if (selector && verifier) {
+    const { data: matchedToken } = await tokens.findActiveRefreshTokenBySelector(selector)
 
-    for (const t of userTokens ?? []) {
-      if (await compareToken(incomingToken, t.token_hash)) {
-        await tokens.deleteRefreshTokenById(t.id)
-        break
-      }
+    if (matchedToken && matchedToken.user_id === req.user!.id && (await compareToken(verifier, matchedToken.token_hash))) {
+      await tokens.deleteRefreshTokenById(matchedToken.id)
     }
   }
 

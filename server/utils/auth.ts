@@ -21,8 +21,14 @@ export function signAccessToken(user: UserPayload, ip?: string) {
   )
 }
 
-export function signRefreshToken() {
-  return randomBytes(64).toString('hex')
+// A refresh token cookie is "{selector}.{verifier}". The selector is stored in
+// plaintext and indexed, so refresh can look up the owning row directly instead
+// of bcrypt-comparing against every active token in the table. The verifier is
+// the actual secret and is only ever stored hashed.
+export function generateRefreshToken() {
+  const selector = randomBytes(16).toString('hex')
+  const verifier = randomBytes(64).toString('hex')
+  return { selector, verifier, cookieValue: `${selector}.${verifier}` }
 }
 
 export function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
