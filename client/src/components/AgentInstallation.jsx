@@ -1,17 +1,9 @@
-import { useState } from "react";
-import { Copy, Check, Info, ShieldCheck } from "lucide-react";
+import { Info, ShieldCheck } from "lucide-react";
 import { useSystemStore } from "../store/system";
+import DockerCommandBlock from "./DockerCommandBlock";
 
 export default function AgentInstallation() {
   const serverData = useSystemStore((state) => state.serverData);
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    if (!serverData?.dockerCommand) return;
-    await navigator.clipboard.writeText(serverData.dockerCommand);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
 
   return (
     <div className="flex flex-col gap-space-md">
@@ -24,17 +16,7 @@ export default function AgentInstallation() {
         </p>
       </div>
 
-      <div className="relative">
-        <div className="p-space-md font-code text-code text-on-surface-variant overflow-x-auto rounded-md bg-surface-container border border-outline-variant pr-14">
-          <pre>{serverData?.dockerCommand}</pre>
-        </div>
-        <button
-          onClick={handleCopy}
-          className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-        >
-          {copied ? <Check size={16} className="text-[#5fd696]" /> : <Copy size={16} />}
-        </button>
-      </div>
+      <DockerCommandBlock commands={serverData?.dockerCommand} />
 
       <div className="grid grid-cols-2 gap-space-md">
         <div className="flex gap-space-sm">

@@ -16,21 +16,32 @@ import { env } from '../../env.js'
 
 const router = Router()
 
-// Helper — builds the docker run command string (no placeholder fallbacks)
+// Helper — builds the docker run command for each shell's line-continuation syntax
+// (bash/sh use `\`, PowerShell uses backtick `` ` ``, cmd.exe uses `^`)
 export function buildDockerCommand(agentKey: string, agentSecret: string) {
   const backendUrl = env.BACKEND_WS_URL
   if (!backendUrl) {
     throw new Error('BACKEND_WS_URL is not configured')
   }
-  return (
-    `docker run -d --restart unless-stopped \\\n` +
-    `  --name docker-manager-agent \\\n` +
-    `  -v /var/run/docker.sock:/var/run/docker.sock \\\n` +
-    `  -e AGENT_KEY="${agentKey}" \\\n` +
-    `  -e AGENT_SECRET="${agentSecret}" \\\n` +
-    `  -e BACKEND_WS_URL="${backendUrl}" \\\n` +
-    `  ${env.AGENT_IMAGE}`
-  )
+
+  const args = [
+    'docker run -d --restart unless-stopped',
+    '--name docker-manager-agent',
+    '-v /var/run/docker.sock:/var/run/docker.sock',
+    `-e AGENT_KEY="${agentKey}"`,
+    `-e AGENT_SECRET="${agentSecret}"`,
+    `-e BACKEND_WS_URL="${backendUrl}"`,
+    env.AGENT_IMAGE,
+  ]
+
+  const join = (continuation: string) =>
+    args.join(` ${continuation}\n  `)
+
+  return {
+    bash: join('\\'),
+    powershell: join('`'),
+    cmd: join('^'),
+  }
 }
 
 // ── GET /api/servers ─────────────────────────────────────────
