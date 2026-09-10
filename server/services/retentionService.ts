@@ -1,35 +1,51 @@
-import { deleteOlderThan, type RetentionTable } from '../repositories/metricsRepository.js'
+import {
+  deleteOlderThan,
+  deleteOlderThanForServers,
+  deleteOlderThanForUsers,
+  type RetentionTable,
+} from '../repositories/metricsRepository.js'
+import { listUserIdsForPlan, listServerIdsForOwners } from '../repositories/billingRepository.js'
+import { PLAN_LIMITS, type Plan } from '../config/plans.js'
 import { logger } from '../utils/logger.js'
 
-// Plan-based retention isn't wired up yet (see Module 9 — billing & plan
-// gating). Until then everyone gets the longer Pro-tier retention window.
-const METRICS_RETENTION_DAYS = 30
-const EVENTS_RETENTION_DAYS = 30
+// alert_events keeps a longer, plan-independent window — it's incident
+// history, not raw noisy series, and stays small by nature.
 const ALERT_EVENTS_RETENTION_DAYS = 90
-const AGENT_STATUS_EVENTS_RETENTION_DAYS = 30 // uptime % only looks back 30 days
 
 const CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000 // every 6 hours
+
+const SERVER_SCOPED_TABLES: RetentionTable[] = ['server_metrics', 'docker_events', 'agent_status_events']
 
 function cutoffIso(days: number) {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
 }
 
+function logResult(table: string, error: unknown, count: number | null | undefined) {
+  if (error) {
+    logger.error({ err: error, table }, 'Retention cleanup failed')
+  } else if (count) {
+    logger.info(`Retention cleanup: removed ${count} row(s) from ${table}`)
+  }
+}
+
 export async function runRetentionCleanup() {
-  const jobs: [RetentionTable, number][] = [
-    ['server_metrics', METRICS_RETENTION_DAYS],
-    ['docker_events', EVENTS_RETENTION_DAYS],
-    ['alert_events', ALERT_EVENTS_RETENTION_DAYS],
-    ['agent_status_events', AGENT_STATUS_EVENTS_RETENTION_DAYS],
-  ]
+  const alertResult = await deleteOlderThan('alert_events', cutoffIso(ALERT_EVENTS_RETENTION_DAYS))
+  logResult('alert_events', alertResult.error, alertResult.count)
 
-  for (const [table, days] of jobs) {
-    const { error, count } = await deleteOlderThan(table, cutoffIso(days))
+  for (const plan of Object.keys(PLAN_LIMITS) as Plan[]) {
+    const { retentionDays } = PLAN_LIMITS[plan]
+    const cutoff = cutoffIso(retentionDays)
 
-    if (error) {
-      logger.error({ err: error, table }, 'Retention cleanup failed')
-    } else if (count) {
-      logger.info(`Retention cleanup: removed ${count} row(s) from ${table}`)
+    const userIds = await listUserIdsForPlan(plan)
+    const serverIds = await listServerIdsForOwners(userIds)
+
+    for (const table of SERVER_SCOPED_TABLES) {
+      const { error, count } = await deleteOlderThanForServers(table, cutoff, serverIds)
+      logResult(table, error, count)
     }
+
+    const { error, count } = await deleteOlderThanForUsers('audit_logs', cutoff, userIds)
+    logResult('audit_logs', error, count)
   }
 }
 

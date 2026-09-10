@@ -7,7 +7,10 @@ import { logger } from './utils/logger.js'
 
 import authRoutes   from './routes/auth/index.js'
 import serverRoutes from './routes/servers/index.js'
+import billingRoutes from './routes/billing.js'
+import auditLogRoutes from './routes/auditLogs.js'
 import { apiLimiter } from './middleware/rateLimiter.js'
+import { requireAuth } from './middleware/auth.js'
 
 const app = express()
 
@@ -32,6 +35,8 @@ app.use('/api', apiLimiter)
 // ── Routes ───────────────────────────────────────────────────
 app.use('/api/auth',    authRoutes)
 app.use('/api/servers', serverRoutes)
+app.use('/api/billing', billingRoutes) // webhook route stays unauthenticated; others gate internally
+app.use('/api/audit-logs', requireAuth, auditLogRoutes)
 
 // ── Health check ─────────────────────────────────────────────
 app.get('/health', (req: Request, res: Response) => {

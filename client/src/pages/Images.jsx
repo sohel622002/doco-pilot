@@ -95,21 +95,21 @@ export default function Images() {
   return (
     <div className="max-w-container-max mx-auto">
       {/* <!-- Breadcrumbs & Header --> */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-space-md mb-space-lg">
+      <div className="flex flex-col gap-space-md mb-space-lg">
         <div>
           <h2 className="font-h1 text-h1 text-on-surface mb-space-xs">Image Registry</h2>
           <p className="text-on-surface-variant font-body-main">
             Manage your local and remote Docker image repository
           </p>
         </div>
-        <form onSubmit={handlePull} className="flex items-center gap-space-sm">
+        <form onSubmit={handlePull} className="flex flex-wrap items-center gap-space-sm">
           <input
-            className="h-9 px-space-sm bg-surface-container border border-outline-variant rounded-md font-code text-code text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-outline"
+            className="h-9 flex-1 min-w-[200px] px-space-sm bg-surface-container border border-outline-variant rounded-md font-code text-code text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-outline"
             placeholder="e.g. nginx:latest"
             value={pullValue}
             onChange={(e) => setPullValue(e.target.value)}
           />
-          <Button type="submit" disabled={!write || pulling}>
+          <Button type="submit" disabled={!write || pulling} className="h-9 shrink-0">
             <Download size={16} />
             {pulling ? "Pulling…" : "Pull Image"}
           </Button>
@@ -120,7 +120,7 @@ export default function Images() {
               useImageBuildStore.getState().openModal();
               setBuildOpen(true);
             }}
-            className="flex items-center gap-space-xs h-9 px-space-md rounded-md border border-outline-variant text-on-surface text-[13px] font-medium hover:bg-surface-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+            className="flex items-center gap-space-xs h-9 px-space-md rounded-md border border-outline-variant text-on-surface text-[13px] font-medium hover:bg-surface-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent shrink-0"
           >
             <Hammer size={15} />
             Build Image
@@ -134,7 +134,7 @@ export default function Images() {
                 ? "No dangling images to remove"
                 : `Remove ${danglingImages.length} dangling image(s)`
             }
-            className="flex items-center gap-space-xs h-9 px-space-md rounded-md border border-outline-variant text-error text-[13px] font-medium hover:bg-error-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
+            className="flex items-center gap-space-xs h-9 px-space-md rounded-md border border-outline-variant text-error text-[13px] font-medium hover:bg-error-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent shrink-0"
           >
             <Sparkles size={15} />
             {pruning ? "Pruning…" : `Prune Unused (${danglingImages.length})`}

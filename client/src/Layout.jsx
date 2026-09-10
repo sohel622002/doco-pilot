@@ -10,6 +10,8 @@ import {
   Boxes,
   BellRing,
   Settings as SettingsIcon,
+  CreditCard,
+  ScrollText,
 } from "lucide-react";
 import Header from "./components/Header";
 import { useServers } from "./hooks/useServers";
@@ -24,8 +26,13 @@ const NAV_ITEMS = [
   { name: "Networks", path: "/networks", icon: Waypoints },
   { name: "Stacks", path: "/stacks", icon: Boxes },
   { name: "Alerts", path: "/alerts", icon: BellRing },
+  { name: "Audit Log", path: "/audit-log", icon: ScrollText },
+  { name: "Billing", path: "/billing", icon: CreditCard },
   { name: "Settings", path: "/settings", icon: SettingsIcon },
 ];
+
+// Doesn't depend on the agent being connected — shown even when it's offline.
+const ACCOUNT_LEVEL_PATHS = ["/billing", "/audit-log", "/profile"];
 
 export default function Layout() {
   const { serverId } = useParams();
@@ -127,7 +134,7 @@ export default function Layout() {
           activeLabel={activeItem?.name ?? "Dashboard"}
         />
         <main className="flex-1 overflow-auto p-6">
-          {systemData?.agentState === "online" ? (
+          {systemData?.agentState === "online" || ACCOUNT_LEVEL_PATHS.some((p) => location.pathname.endsWith(p)) ? (
             <Outlet />
           ) : (
             <div className="max-w-container-max mx-auto p-space-md">

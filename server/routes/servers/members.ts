@@ -9,6 +9,8 @@ import { invalidateServerMemberCache } from '../../ws/index.js'
 import * as membershipRepo from '../../repositories/membershipRepository.js'
 import * as profileRepo from '../../repositories/profileRepository.js'
 import * as serverRepo from '../../repositories/serverRepository.js'
+import * as billingRepo from '../../repositories/billingRepository.js'
+import { limitsFor } from '../../config/plans.js'
 
 const router = Router()
 
@@ -46,6 +48,17 @@ router.post('/:id/members', validateBody(inviteMemberSchema), async (req, res) =
   if (!(await requireRole(req, res, req.params.id, 'owner'))) return
 
   const { email, role } = req.body
+
+  const { data: profile } = await billingRepo.findPlan(req.user!.id)
+  const { maxMembersPerServer } = limitsFor(profile?.plan)
+  const { data: existingMembers } = await membershipRepo.listMembers(req.params.id)
+
+  if ((existingMembers?.length ?? 0) >= maxMembersPerServer) {
+    return res.status(403).json({
+      error: `Free plan is limited to ${maxMembersPerServer} member(s) per server — upgrade to Pro to invite more.`,
+      code: 'PLAN_LIMIT_MEMBERS',
+    })
+  }
 
   const { data: invitedUser } = await profileRepo.findByEmailCaseInsensitive(email)
 

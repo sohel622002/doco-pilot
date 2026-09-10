@@ -10,6 +10,8 @@ import { logger } from '../../utils/logger.js'
 import { requireRole } from '../../services/membershipService.js'
 import { listMemberships, insertOwnerMember } from '../../repositories/membershipRepository.js'
 import * as serverRepo from '../../repositories/serverRepository.js'
+import * as billingRepo from '../../repositories/billingRepository.js'
+import { limitsFor } from '../../config/plans.js'
 import { env } from '../../env.js'
 
 const router = Router()
@@ -59,6 +61,17 @@ router.get('/', async (req, res) => {
 // Create a new server — stores hashes (for verify) + encrypted (for retrieve)
 router.post('/', validateBody(createServerSchema), async (req, res) => {
   const { name, ip } = req.body
+
+  const { data: profile } = await billingRepo.findPlan(req.user!.id)
+  const { maxServers } = limitsFor(profile?.plan)
+  const { count: ownedCount } = await billingRepo.countOwnedServers(req.user!.id)
+
+  if ((ownedCount ?? 0) >= maxServers) {
+    return res.status(403).json({
+      error: `Free plan is limited to ${maxServers} server(s) — upgrade to Pro to add more.`,
+      code: 'PLAN_LIMIT_SERVERS',
+    })
+  }
 
   const { data: server, error: insertError } = await serverRepo.insertServer(req.user!.id, name, ip)
 

@@ -294,6 +294,45 @@ table.compare td.us{background:color-mix(in srgb, var(--accent) 8%, var(--surfac
 .no{color:var(--text-faint); font-family:var(--mono);}
 .note-row td{font-size:12.5px; color:var(--text-faint); font-style:italic; padding-top:16px; border-top:1px solid var(--border);}
 
+/* ---------- PRICING ---------- */
+.pricing-grid{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:24px;
+  max-width:760px;
+  margin:0 auto;
+}
+.price-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:32px 28px;
+  display:flex;
+  flex-direction:column;
+}
+.price-card.featured{
+  border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 6%, var(--surface));
+  position:relative;
+}
+.price-card .badge{
+  position:absolute; top:-12px; right:24px;
+  background:var(--accent); color:var(--accent-on);
+  font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  padding:5px 10px; border-radius:999px;
+}
+.price-card h3{font-family:var(--display); font-size:18px; font-weight:700;}
+.price-card .amount{
+  display:flex; align-items:baseline; gap:6px;
+  margin:16px 0 20px;
+}
+.price-card .amount .num{font-family:var(--display); font-size:40px; font-weight:800;}
+.price-card .amount .per{font-size:14px; color:var(--text-dim);}
+.price-list{list-style:none; margin:0 0 24px; padding:0; display:flex; flex-direction:column; gap:12px; flex:1;}
+.price-list li{display:flex; gap:10px; font-size:14px; color:var(--text);}
+.price-list li .chk{color:var(--ok); font-family:var(--mono); flex:none;}
+@media (max-width:640px){ .pricing-grid{grid-template-columns:1fr;} }
+
 /* ---------- STATUS BANNER ---------- */
 .status-banner{
   display:flex; gap:14px; align-items:flex-start;
@@ -422,11 +461,12 @@ footer .flinks a:hover{color:var(--text);}
       <a href="#features">Features</a>
       <a href="#how">How it works</a>
       <a href="#security">Security</a>
+      <a href="#pricing">Pricing</a>
       <a href="#compare">Compare</a>
     </div>
     <div class="navcta">
-      <a class="btn btn-ghost btn-sm" href="https://github.com/sohel622002/doco-pilot" target="_blank" rel="noopener">GitHub</a>
-      <a class="btn btn-primary btn-sm" href="#get-started">Try it free</a>
+      <a class="btn btn-ghost btn-sm" href="/app/login">Log in</a>
+      <a class="btn btn-primary btn-sm" href="/app/register">Try it free</a>
     </div>
   </div>
 </nav>
@@ -437,7 +477,7 @@ footer .flinks a:hover{color:var(--text);}
     <h1>Your Docker fleet,<br>watched and run<br>from <span class="accent">one console.</span></h1>
     <p class="sub">doco-pilot is a control plane for the Docker hosts you already run. Drop a lightweight agent on each VPS, and get live containers, images, metrics, and alerts in one place — without ever opening the Docker socket to the internet.</p>
     <div class="hero-actions">
-      <a class="btn btn-primary" href="#get-started">Try it for free</a>
+      <a class="btn btn-primary" href="/app/register">Try it for free</a>
       <a class="btn btn-ghost" href="https://github.com/sohel622002/doco-pilot" target="_blank" rel="noopener">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
         View on GitHub
@@ -609,7 +649,43 @@ footer .flinks a:hover{color:var(--text);}
       <strong style="color:var(--accent);">●</strong>
       <div>
         <strong>Early and honest.</strong>
-        <p>doco-pilot is an active open-source project without a tagged stable release yet. Core flows — auth, servers, agents, containers, images, live stats — work today. A few chrome elements in the UI are still catching up. We'd rather tell you that now than have you find out later.</p>
+        <p>doco-pilot is an active open-source project without a tagged stable release yet. Core flows — auth, servers, agents, containers, images, live stats — work today. A few chrome elements in the UI are still catching up. We'd rather tell you that now, before pricing, than have you find out later. Pro pricing below reflects that: it's priced like an early build, not a finished product, and you can cancel anytime.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">Pricing</div>
+      <h2>Free to start. Cheap to keep.</h2>
+      <p>No credit card for the free plan. Pro is priced for an early-stage project — think of it as supporting development, not buying a finished product. Cancel anytime.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>Free</h3>
+        <div class="amount"><span class="num">$0</span></div>
+        <ul class="price-list">
+          <li><span class="chk">✓</span>Up to 2 servers</li>
+          <li><span class="chk">✓</span>Solo use (no team sharing)</li>
+          <li><span class="chk">✓</span>7 days of metrics, events &amp; audit history</li>
+          <li><span class="chk">✓</span>All core container/image/volume/network tools</li>
+        </ul>
+        <a class="btn btn-ghost" href="/app/register">Start free</a>
+      </div>
+      <div class="price-card featured">
+        <span class="badge">Most popular</span>
+        <h3>Pro</h3>
+        <div class="amount"><span class="num">$5</span><span class="per">/ month</span></div>
+        <ul class="price-list">
+          <li><span class="chk">✓</span>Unlimited servers</li>
+          <li><span class="chk">✓</span>Unlimited team members with RBAC</li>
+          <li><span class="chk">✓</span>30 days of metrics, events &amp; audit history</li>
+          <li><span class="chk">✓</span>Everything in Free</li>
+          <li><span class="chk">✓</span>Early-adopter price, locked in for as long as you stay subscribed</li>
+        </ul>
+        <a class="btn btn-primary" href="/app/register">Try Pro</a>
       </div>
     </div>
   </div>
@@ -622,7 +698,7 @@ footer .flinks a:hover{color:var(--text);}
       <h2>Point it at your first server in under five minutes.</h2>
       <p>Free to run. Open source. No credit card, no Docker socket exposed to anyone but you.</p>
       <div class="cta-actions">
-        <a class="btn btn-primary" href="#">Try it for free</a>
+        <a class="btn btn-primary" href="/app/register">Try it for free</a>
         <a class="btn btn-ghost" href="https://github.com/sohel622002/doco-pilot" target="_blank" rel="noopener">Star on GitHub</a>
       </div>
     </div>
@@ -636,6 +712,7 @@ footer .flinks a:hover{color:var(--text);}
       <a href="https://github.com/sohel622002/doco-pilot" target="_blank" rel="noopener">GitHub</a>
       <a href="#features">Features</a>
       <a href="#security">Security</a>
+      <a href="#pricing">Pricing</a>
       <a href="#compare">Compare</a>
     </div>
   </div>

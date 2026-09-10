@@ -27,7 +27,7 @@ api.interceptors.response.use(
     // Never chain refresh attempts off the refresh endpoint itself — each
     // api.post() gets a fresh config, so _retry alone cannot stop a loop.
     if (originalRequest.url?.includes("/api/auth/refresh")) {
-      redirectToLogin();
+      if (!originalRequest.skipAuthRedirect) redirectToLogin();
       return Promise.reject(error);
     }
 
@@ -45,7 +45,9 @@ api.interceptors.response.use(
       await refreshPromise;
       return api(originalRequest);
     } catch (refreshError) {
-      redirectToLogin();
+      // Silent auth checks (e.g. the public landing page probing whether a
+      // visitor is already logged in) shouldn't force-navigate anyone away.
+      if (!originalRequest.skipAuthRedirect) redirectToLogin();
       return Promise.reject(refreshError);
     }
   },

@@ -98,7 +98,7 @@ router.get('/google/callback', authLimiter, async (req, res) => {
       target: user.id,
     })
 
-    res.redirect(frontendRedirect('/'))
+    res.redirect(frontendRedirect('/dashboard'))
   } catch (err) {
     logger.error({ err }, 'Google auth callback failed')
     return fail('google_auth_failed')

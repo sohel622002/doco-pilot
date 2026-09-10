@@ -1,10 +1,27 @@
 import supabase from '../config/supabase.js'
 
-const RETENTION_TABLES = ['server_metrics', 'docker_events', 'alert_events', 'agent_status_events'] as const
+const RETENTION_TABLES = [
+  'server_metrics',
+  'docker_events',
+  'alert_events',
+  'agent_status_events',
+  'audit_logs',
+] as const
 export type RetentionTable = (typeof RETENTION_TABLES)[number]
 
 export async function deleteOlderThan(table: RetentionTable, cutoffIso: string) {
   return supabase.from(table).delete({ count: 'exact' }).lt('ts', cutoffIso)
+}
+
+// Plan-scoped variants — retention window differs by the owning account's plan.
+export async function deleteOlderThanForServers(table: RetentionTable, cutoffIso: string, serverIds: string[]) {
+  if (serverIds.length === 0) return { error: null, count: 0 }
+  return supabase.from(table).delete({ count: 'exact' }).lt('ts', cutoffIso).in('server_id', serverIds)
+}
+
+export async function deleteOlderThanForUsers(table: RetentionTable, cutoffIso: string, userIds: string[]) {
+  if (userIds.length === 0) return { error: null, count: 0 }
+  return supabase.from(table).delete({ count: 'exact' }).lt('ts', cutoffIso).in('user_id', userIds)
 }
 
 // ── server_metrics ───────────────────────────────────────────

@@ -11,6 +11,7 @@ create table if not exists public.profiles (
   password_hash text,
   google_id   text unique,
   email_verified boolean not null default false,
+  plan        text not null default 'free' check (plan in ('free', 'pro')),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );

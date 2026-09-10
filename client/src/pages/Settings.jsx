@@ -40,7 +40,7 @@ function DangerZoneSection() {
     setDeleting(true);
     try {
       await api.delete(`/api/servers/${serverId}`);
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       console.error("Failed to delete server:", err);
       setDeleting(false);
