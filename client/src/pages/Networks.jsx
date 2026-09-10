@@ -5,6 +5,8 @@ import { useNetworkStore } from "../store/network";
 import { WS_ACTIONS } from "../lib/actions";
 import { Network as NetworkIcon, Plus, Trash2 } from "lucide-react";
 import { Card, Badge, Button } from "../components/ui";
+import { useServers } from "../hooks/useServers";
+import { canWrite } from "../lib/roles";
 
 const BUILT_IN_NETWORKS = new Set(["bridge", "host", "none"]);
 
@@ -12,6 +14,8 @@ export default function Networks() {
   const { serverId } = useParams();
   const { sendMessage, isConnected } = useWebSocket();
   const networks = useNetworkStore((state) => state.networks);
+  const { data: serversData } = useServers();
+  const write = canWrite(serversData?.servers?.find((s) => s.id === serverId)?.role);
   const [createOpen, setCreateOpen] = useState(false);
   const [form, setForm] = useState({ name: "", driver: "bridge", subnet: "", gateway: "" });
   const [creating, setCreating] = useState(false);
@@ -63,10 +67,12 @@ export default function Networks() {
             Manage Docker networks and container connectivity.
           </p>
         </div>
-        <Button onClick={() => setCreateOpen((v) => !v)}>
-          <Plus size={16} />
-          Create Network
-        </Button>
+        {write && (
+          <Button onClick={() => setCreateOpen((v) => !v)}>
+            <Plus size={16} />
+            Create Network
+          </Button>
+        )}
       </div>
 
       {createOpen && (
@@ -201,7 +207,7 @@ export default function Networks() {
                       <button
                         title={isBuiltIn ? "Built-in network cannot be removed" : "Remove Network"}
                         className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
-                        disabled={isBuiltIn || network.connectedContainers.length > 0}
+                        disabled={!write || isBuiltIn || network.connectedContainers.length > 0}
                         onClick={() => handleRemove(network)}
                       >
                         <Trash2 size={16} />

@@ -40,14 +40,14 @@ export default function AgentInstallation() {
         <div className="flex gap-space-sm">
           <Info size={16} className="text-on-surface-variant shrink-0 mt-0.5" />
           <p className="font-body-main text-[13px] leading-relaxed text-on-surface-variant">
-            Requires Docker Engine 20.10+ and network access to port 443 on
-            api.dockerdessk.io.
+            Requires Docker Engine 20.10+ and outbound network access to the
+            backend WebSocket endpoint over HTTPS.
           </p>
         </div>
         <div className="flex gap-space-sm">
           <ShieldCheck size={16} className="text-on-surface-variant shrink-0 mt-0.5" />
           <p className="font-body-main text-[13px] leading-relaxed text-on-surface-variant">
-            Uses a short-lived installation token. Do not share this command
+            Embeds this server's agent key/secret. Do not share this command
             with unauthorized users.
           </p>
         </div>

@@ -7,8 +7,11 @@ import {
   Layers,
   HardDrive,
   Waypoints,
+  Boxes,
   BellRing,
   Settings as SettingsIcon,
+  CreditCard,
+  ScrollText,
 } from "lucide-react";
 import Header from "./components/Header";
 import { useServers } from "./hooks/useServers";
@@ -21,9 +24,15 @@ const NAV_ITEMS = [
   { name: "Images", path: "/images", icon: Layers },
   { name: "Volumes", path: "/volumes", icon: HardDrive },
   { name: "Networks", path: "/networks", icon: Waypoints },
+  { name: "Stacks", path: "/stacks", icon: Boxes },
   { name: "Alerts", path: "/alerts", icon: BellRing },
+  { name: "Audit Log", path: "/audit-log", icon: ScrollText },
+  { name: "Billing", path: "/billing", icon: CreditCard },
   { name: "Settings", path: "/settings", icon: SettingsIcon },
 ];
+
+// Doesn't depend on the agent being connected — shown even when it's offline.
+const ACCOUNT_LEVEL_PATHS = ["/billing", "/audit-log", "/profile"];
 
 export default function Layout() {
   const { serverId } = useParams();
@@ -97,7 +106,8 @@ export default function Layout() {
           to="/servers"
           className="flex items-center gap-space-xs px-space-xs mb-space-lg hover:opacity-80 transition-opacity"
         >
-          <span className="logo text-3xl">DocoPilot</span>
+          <img src="/doco-pilot-logo.svg" alt="DocoPilot" className="h-8 w-8" />
+          <span className="font-semibold text-lg">DocoPilot</span>
         </NavLink>
 
         <span className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider px-space-xs mb-space-sm">
@@ -124,7 +134,7 @@ export default function Layout() {
           activeLabel={activeItem?.name ?? "Dashboard"}
         />
         <main className="flex-1 overflow-auto p-6">
-          {systemData?.agentState === "online" ? (
+          {systemData?.agentState === "online" || ACCOUNT_LEVEL_PATHS.some((p) => location.pathname.endsWith(p)) ? (
             <Outlet />
           ) : (
             <div className="max-w-container-max mx-auto p-space-md">

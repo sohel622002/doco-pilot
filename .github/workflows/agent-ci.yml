@@ -23,3 +23,4 @@ jobs:
           cache-dependency-path: agent/package-lock.json
       - run: npm ci
       - run: node --check src/index.js
+      - run: npm test

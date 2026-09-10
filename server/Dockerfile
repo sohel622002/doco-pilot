@@ -1,19 +1,32 @@
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+COPY package*.json tsconfig.json tsconfig.build.json ./
+RUN npm ci
+
+COPY app.ts index.ts env.ts ./
+COPY config/ ./config/
+COPY middleware/ ./middleware/
+COPY repositories/ ./repositories/
+COPY routes/ ./routes/
+COPY schemas/ ./schemas/
+COPY services/ ./services/
+COPY types/ ./types/
+COPY utils/ ./utils/
+COPY validators/ ./validators/
+COPY ws/ ./ws/
+
+RUN npm run build
+
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies first (layer cache)
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-# Server code lives at package root (no src/)
-COPY app.js index.js ./
-COPY config/ ./config/
-COPY middleware/ ./middleware/
-COPY routes/ ./routes/
-COPY schemas/ ./schemas/
-COPY utils/ ./utils/
-COPY ws/ ./ws/
+COPY --from=build /app/dist ./dist
 
 # Never run as root
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
@@ -21,4 +34,4 @@ USER appuser
 
 EXPOSE 3001
 
-CMD ["node", "index.js"]
+CMD ["node", "dist/index.js"]

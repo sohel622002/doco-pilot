@@ -55,7 +55,7 @@ export default function Login() {
       const userData = await res.json();
       localStorage.setItem("user", JSON.stringify(userData?.user || {}));
 
-      navigate("/");
+      navigate("/dashboard");
     } catch (err) {
       console.error(err);
       setError("Login failed");

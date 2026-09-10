@@ -11,6 +11,7 @@ create table if not exists public.profiles (
   password_hash text,
   google_id   text unique,
   email_verified boolean not null default false,
+  plan        text not null default 'free' check (plan in ('free', 'pro')),
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
@@ -46,6 +47,7 @@ create table if not exists public.servers (
 create table if not exists public.refresh_tokens (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references public.profiles(id) on delete cascade,
+  selector    text not null unique,
   token_hash  text not null unique,
   expires_at  timestamptz not null,
   created_at  timestamptz not null default now()
@@ -86,6 +88,7 @@ create table if not exists public.audit_logs (
 -- Indexes
 create index if not exists servers_user_id_idx on public.servers(user_id);
 create index if not exists refresh_tokens_user_id_idx on public.refresh_tokens(user_id);
+create index if not exists refresh_tokens_expires_at_idx on public.refresh_tokens(expires_at);
 create index if not exists password_resets_user_id_idx on public.password_resets(user_id);
 create index if not exists email_verifications_user_id_idx on public.email_verifications(user_id);
 create index if not exists audit_logs_user_id_idx on public.audit_logs(user_id);

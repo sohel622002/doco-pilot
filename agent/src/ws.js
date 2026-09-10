@@ -1,7 +1,8 @@
 import WebSocket from 'ws'
 import { buildHandshakeUrl } from './sign.js'
 import { handleAction } from './actions.js'
-import { watchDockerEvents } from './docker.js'
+import { watchDockerEvents, startExecSession, resizeExecSession, buildImageFromDockerfile } from './docker.js'
+import { deployStack, downStack } from './stacks.js'
 
 const AGENT_KEY      = process.env.AGENT_KEY
 const BACKEND_WS_URL = process.env.BACKEND_WS_URL
@@ -15,6 +16,103 @@ let ws            = null
 let reconnectMs   = RECONNECT_INITIAL_MS
 let stopEvents    = null   // cleanup fn from watchDockerEvents
 let isShuttingDown = false
+
+// sessionId → { exec, stream } — active interactive exec sessions
+const execSessions = new Map()
+
+function closeExecSession(sessionId) {
+  const session = execSessions.get(sessionId)
+  if (!session) return
+  execSessions.delete(sessionId)
+  try {
+    session.stream.end()
+  } catch {
+    // stream may already be closed
+  }
+}
+
+function closeAllExecSessions() {
+  for (const sessionId of [...execSessions.keys()]) closeExecSession(sessionId)
+}
+
+async function handleExecStart({ sessionId, containerId, cols, rows }) {
+  try {
+    const { exec, stream } = await startExecSession(containerId, { cols, rows })
+    execSessions.set(sessionId, { exec, stream })
+
+    stream.on('data', (chunk) => {
+      send({ type: 'containers:exec:data', sessionId, data: chunk.toString('utf8') })
+    })
+    stream.on('end', () => {
+      execSessions.delete(sessionId)
+      send({ type: 'containers:exec:exit', sessionId })
+    })
+    stream.on('error', (err) => {
+      execSessions.delete(sessionId)
+      send({ type: 'containers:exec:exit', sessionId, error: err.message })
+    })
+
+    send({ type: 'containers:exec:ready', sessionId, containerId })
+  } catch (err) {
+    send({ type: 'containers:exec:error', sessionId, error: err.message })
+  }
+}
+
+function handleExecInput({ sessionId, data }) {
+  const session = execSessions.get(sessionId)
+  if (session?.stream?.writable && typeof data === 'string') {
+    session.stream.write(data)
+  }
+}
+
+async function handleExecResize({ sessionId, cols, rows }) {
+  const session = execSessions.get(sessionId)
+  if (!session || !(cols > 0) || !(rows > 0)) return
+  try {
+    await resizeExecSession(session.exec, cols, rows)
+  } catch {
+    // container may have exited between keystrokes — ignore
+  }
+}
+
+function handleExecStop({ sessionId }) {
+  closeExecSession(sessionId)
+}
+
+// ── Image build (streamed log lines, one-shot — not cancellable in V2) ──
+async function handleImageBuildStart({ sessionId, imageName, dockerfile, buildArgs }) {
+  try {
+    const result = await buildImageFromDockerfile(
+      dockerfile,
+      { tag: imageName, buildArgs },
+      (line) => send({ type: 'images:build:log', sessionId, line }),
+    )
+    send({ type: 'images:build:done', sessionId, ok: true, tag: result.tag })
+  } catch (err) {
+    send({ type: 'images:build:done', sessionId, ok: false, error: err.message })
+  }
+}
+
+// ── Compose stack deploy/down (streamed log lines, one-shot) ────
+async function handleStackDeployStart({ sessionId, stackName, composeYaml }) {
+  try {
+    await deployStack(stackName, composeYaml, (line) =>
+      send({ type: 'stacks:deploy:log', sessionId, line }),
+    )
+    send({ type: 'stacks:deploy:done', sessionId, ok: true, name: stackName })
+  } catch (err) {
+    send({ type: 'stacks:deploy:done', sessionId, ok: false, error: err.message })
+  }
+}
+
+async function handleStackDownStart({ sessionId, stackName }) {
+  try {
+    await downStack(stackName, (line) => send({ type: 'stacks:down:log', sessionId, line }))
+    send({ type: 'stacks:down:done', sessionId, ok: true, name: stackName })
+  } catch (err) {
+    send({ type: 'stacks:down:done', sessionId, ok: false, error: err.message })
+  }
+}
 
 export function connect() {
   if (isShuttingDown) return
@@ -54,6 +152,25 @@ export function connect() {
     // Verify HMAC signature — drop tampered messages
     let payload = msg;
 
+    // Interactive exec is a persistent stream, not a single request/response —
+    // handle it separately from the ACTION_HANDLERS request/reply model.
+    switch (payload.action) {
+      case 'containers:exec:start':
+        return handleExecStart(payload)
+      case 'containers:exec:input':
+        return handleExecInput(payload)
+      case 'containers:exec:resize':
+        return handleExecResize(payload)
+      case 'containers:exec:stop':
+        return handleExecStop(payload)
+      case 'images:build:start':
+        return handleImageBuildStart(payload)
+      case 'stacks:deploy:start':
+        return handleStackDeployStart(payload)
+      case 'stacks:down:start':
+        return handleStackDownStart(payload)
+    }
+
     // Execute the action
     try {
       const result = await handleAction(payload)
@@ -72,6 +189,7 @@ export function connect() {
   ws.on('close', (code, reason) => {
     console.log(`Disconnected (code: ${code}, reason: ${reason?.toString() || 'none'})`)
     cleanup()
+    closeAllExecSessions()
     scheduleReconnect()
   })
 
@@ -126,5 +244,6 @@ function cleanup() {
 export function shutdown() {
   isShuttingDown = true
   cleanup()
+  closeAllExecSessions()
   if (ws) ws.close(1000, 'Agent shutting down')
 }

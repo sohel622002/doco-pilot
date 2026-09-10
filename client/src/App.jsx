@@ -4,9 +4,13 @@ import Images from "./pages/Images";
 import Containers from "./pages/Containers";
 import Volumes from "./pages/Volumes";
 import Networks from "./pages/Networks";
+import Stacks from "./pages/Stacks";
 import Alerts from "./pages/Alerts";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import Billing from "./pages/Billing";
+import AuditLog from "./pages/AuditLog";
+import Landing from "./pages/Landing";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -28,7 +32,8 @@ function App() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/" element={<RootRedirect />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/dashboard" element={<RootRedirect />} />
             <Route path="/servers" element={<Servers />} />
             <Route  path="/:serverId" element={<Layout />}>
               <Route index element={<Home />} />
@@ -36,7 +41,10 @@ function App() {
               <Route path="images" element={<Images />} />
               <Route path="volumes" element={<Volumes />} />
               <Route path="networks" element={<Networks />} />
+              <Route path="stacks" element={<Stacks />} />
               <Route path="alerts" element={<Alerts />} />
+              <Route path="audit-log" element={<AuditLog />} />
+              <Route path="billing" element={<Billing />} />
               <Route path="settings" element={<Settings />} />
               <Route path="profile" element={<Profile />} />
             </Route>

@@ -34,7 +34,7 @@ export default function VerifyEmail() {
             <p className="text-body-main text-on-surface-variant mb-6">
               Your email address has been confirmed.
             </p>
-            <Link to="/" className="text-primary font-medium hover:underline">
+            <Link to="/dashboard" className="text-primary font-medium hover:underline">
               Go to dashboard
             </Link>
           </>

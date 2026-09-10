@@ -5,11 +5,15 @@ import { useVolumeStore } from "../store/volume";
 import { WS_ACTIONS } from "../lib/actions";
 import { HardDrive, Trash2 } from "lucide-react";
 import { Card, Badge } from "../components/ui";
+import { useServers } from "../hooks/useServers";
+import { canWrite } from "../lib/roles";
 
 export default function Volumes() {
   const { serverId } = useParams();
   const { sendMessage, isConnected } = useWebSocket();
   const volumes = useVolumeStore((state) => state.volumes);
+  const { data: serversData } = useServers();
+  const write = canWrite(serversData?.servers?.find((s) => s.id === serverId)?.role);
 
   const refreshVolumes = () => sendMessage({ action: WS_ACTIONS.VOLUMES_LIST, serverId });
 
@@ -124,7 +128,7 @@ export default function Volumes() {
                     <button
                       title="Remove Volume"
                       className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
-                      disabled={!volume.orphaned}
+                      disabled={!write || !volume.orphaned}
                       onClick={() => handleRemove(volume.name)}
                     >
                       <Trash2 size={16} />

@@ -5,6 +5,7 @@ import { useServers } from "../hooks/useServers";
 import api from "../lib/axios";
 import { Plus, Server as ServerIcon, Trash2, Copy, Check, Filter } from "lucide-react";
 import { Card, Badge, Button } from "../components/ui";
+import { isOwner } from "../lib/roles";
 
 const HEALTH_META = {
   ok: { label: "OK", dot: "bg-[#5fd696]", tone: "success" },
@@ -72,36 +73,38 @@ function AddServerForm({ onCreated }) {
   };
 
   return (
-    <Card as="form" onSubmit={onSubmit} className="flex flex-col md:flex-row gap-space-sm md:items-end mb-3">
-      <div className="flex-1 space-y-space-xs">
-        <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider block">
-          Name
-        </label>
-        <input
-          required
-          className="w-full h-10 px-space-sm bg-surface-container border border-outline-variant rounded-md text-body-main text-on-surface outline-none focus:border-outline"
-          placeholder="prod-01"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
+    <Card as="form" onSubmit={onSubmit} className="mb-3">
+      <div className="flex flex-col md:flex-row gap-space-sm md:items-end">
+        <div className="flex-1 space-y-space-xs">
+          <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider block">
+            Name
+          </label>
+          <input
+            required
+            className="w-full h-10 px-space-sm bg-surface-container border border-outline-variant rounded-md text-body-main text-on-surface outline-none focus:border-outline"
+            placeholder="prod-01"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </div>
+        <div className="flex-1 space-y-space-xs">
+          <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider block">
+            IP / Hostname
+          </label>
+          <input
+            required
+            className="w-full h-10 px-space-sm bg-surface-container border border-outline-variant rounded-md text-body-main text-on-surface outline-none focus:border-outline"
+            placeholder="203.0.113.10"
+            value={ip}
+            onChange={(e) => setIp(e.target.value)}
+          />
+        </div>
+        <Button type="submit" disabled={loading} className="h-10">
+          <Plus size={16} />
+          {loading ? "Creating…" : "Add Server"}
+        </Button>
       </div>
-      <div className="flex-1 space-y-space-xs">
-        <label className="font-label-caps text-label-caps text-on-surface-variant uppercase tracking-wider block">
-          IP / Hostname
-        </label>
-        <input
-          required
-          className="w-full h-10 px-space-sm bg-surface-container border border-outline-variant rounded-md text-body-main text-on-surface outline-none focus:border-outline"
-          placeholder="203.0.113.10"
-          value={ip}
-          onChange={(e) => setIp(e.target.value)}
-        />
-      </div>
-      <Button type="submit" disabled={loading} className="h-10">
-        <Plus size={16} />
-        {loading ? "Creating…" : "Add Server"}
-      </Button>
-      {error && <p className="text-error text-body-main md:ml-space-sm">{error}</p>}
+      {error && <p className="text-error text-body-main mt-space-sm">{error}</p>}
     </Card>
   );
 }
@@ -243,16 +246,23 @@ export default function Servers() {
                       <span className={`h-1.5 w-1.5 rounded-full ${HEALTH_META[health].dot}`}></span>
                       {HEALTH_META[health].label}
                     </Badge>
-                    <button
-                      title="Delete server"
-                      className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(server.id);
-                      }}
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {server.role && !isOwner(server.role) && (
+                      <Badge tone="neutral" title="Shared with you">
+                        {server.role}
+                      </Badge>
+                    )}
+                    {isOwner(server.role) && (
+                      <button
+                        title="Delete server"
+                        className="p-1.5 rounded-md text-on-surface-variant hover:text-error hover:bg-error-container transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(server.id);
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
