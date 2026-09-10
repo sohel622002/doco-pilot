@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useServers } from "../hooks/useServers";
 import api from "../lib/axios";
-import { Plus, Server as ServerIcon, Trash2, Copy, Check, Filter } from "lucide-react";
+import { Plus, Server as ServerIcon, Trash2, Filter } from "lucide-react";
 import { Card, Badge, Button } from "../components/ui";
+import DockerCommandBlock from "../components/DockerCommandBlock";
 import { isOwner } from "../lib/roles";
 
 const HEALTH_META = {
@@ -115,7 +116,6 @@ export default function Servers() {
   const navigate = useNavigate();
   const [newServer, setNewServer] = useState(null);
   const [healthFilter, setHealthFilter] = useState("all");
-  const [copied, setCopied] = useState(false);
 
   const servers = useMemo(() => data?.servers || [], [data]);
 
@@ -194,21 +194,7 @@ export default function Servers() {
             <p className="font-body-main text-body-main text-on-surface-variant mb-space-sm">
               Server created — run this on the target host to connect its agent:
             </p>
-            <div className="relative">
-              <div className="p-space-md pr-14 font-code text-code text-on-surface-variant overflow-x-auto rounded-md bg-surface-container border border-outline-variant">
-                <pre>{newServer.dockerCommand}</pre>
-              </div>
-              <button
-                className="absolute top-2 right-2 h-8 w-8 flex items-center justify-center rounded-md text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors"
-                onClick={() => {
-                  navigator.clipboard.writeText(newServer.dockerCommand);
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
-                }}
-              >
-                {copied ? <Check size={16} className="text-[#5fd696]" /> : <Copy size={16} />}
-              </button>
-            </div>
+            <DockerCommandBlock commands={newServer.dockerCommand} />
           </Card>
         )}
 
