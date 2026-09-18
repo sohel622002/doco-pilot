@@ -35,7 +35,9 @@ api.interceptors.response.use(
 
     if (!refreshPromise) {
       refreshPromise = api
-        .post("/api/auth/refresh")
+        .post("/api/auth/refresh", null, {
+          skipAuthRedirect: !!originalRequest.skipAuthRedirect,
+        })
         .finally(() => {
           refreshPromise = null;
         });

@@ -1,1 +1,9 @@
 node_modules
+npm-debug.log*
+.git
+.gitignore
+*.md
+coverage
+.vitest
+**/*.test.js
+**/__tests__
