@@ -51,8 +51,10 @@ crawlable, comparatively little extra work is needed to start ranking.
 | 7 | 🟡 Medium | Headings are statements, not questions (no PAA targeting) | AEO | 🟡 Partial |
 | 8 | 🟢 Quick win | Logo/screenshot alt text is empty or generic | SEO | 🟢 Fixed |
 | 9 | 🟢 Quick win | No plain "doco-pilot is a ___" definition sentence | AEO | 🟢 Fixed |
+| 10 | 🟡 Medium | No HowTo schema on the 3-step setup flow | AEO | 🟢 Fixed |
+| 11 | 🟢 Quick win | Inconsistent brand casing: "DocoPilot" vs "doco-pilot" | GEO | 🟢 Fixed |
 
-Only #5 remains open — turning `#pricing` / `#compare` / `#security` anchors into real indexable routes. That's a bigger structural change (separate pages instead of anchors on one page) and lower urgency now that the whole landing page is crawlable as one rich document.
+#5, #10, and #11 remain open — turning `#pricing` / `#compare` / `#security` anchors into real indexable routes. That's a bigger structural change (separate pages instead of anchors on one page) and lower urgency now that the whole landing page is crawlable as one rich document.
 
 ---
 
@@ -62,40 +64,41 @@ Only #5 remains open — turning `#pricing` / `#compare` / `#security` anchors i
 
 | Signal | Finding | Status |
 |---|---|---|
-| Title tag | Only "DocoPilot" — no keywords, no value prop | 🔴 Missing |
-| Meta description | Not present | 🔴 Missing |
-| Heading hierarchy | Good H1/H2s exist in React source but don't reach crawlers | 🔴 Missing |
-| Canonical tag | Not present | 🔴 Missing |
-| robots.txt / sitemap.xml | Don't exist as static files | 🔴 Missing |
+| Title tag | Fixed — descriptive title with value prop in `index.html` | 🟢 Good |
+| Meta description | Fixed — present in `index.html`, static so it reaches crawlers | 🟢 Good |
+| Heading hierarchy | Fixed — H1/H2s now reach crawlers via prerendered `dist/index.html` | 🟢 Good |
+| Canonical tag | Fixed — `<link rel="canonical">` added to `index.html` | 🟢 Good |
+| robots.txt / sitemap.xml | Fixed — real static files, `vercel.json` rewrite no longer swallows them | 🟢 Good |
 | Viewport meta | Present and correct | 🟢 Good |
-| Image alt text | Logo `alt=""`, screenshot alt is generic | 🟡 Needs attention |
-| Internal links | Nav links are in-page anchors, not real URLs | 🟡 Needs attention |
-| Open Graph / Twitter Card | None present | 🔴 Missing |
+| Image alt text | Fixed — logo and screenshot both have descriptive alt text | 🟢 Good |
+| Internal links | Still in-page anchors, not real separate URLs | 🟡 Needs attention |
+| Open Graph / Twitter Card | Fixed — both added to `index.html` | 🟢 Good |
 | HTTPS | Served over HTTPS via Vercel | 🟢 Good |
+| Sitemap coverage | Sitemap only lists `/`, `/login`, `/register` — no per-section URLs yet since those are still anchors, not routes | 🟡 Needs attention |
 
 ### GEO
 
 | Signal | Finding | Status |
 |---|---|---|
 | Author / team info | No About/Team page; GitHub repo is only identity signal | 🔴 Missing |
-| Organization schema | No JSON-LD anywhere | 🔴 Missing |
+| Organization schema | Fixed — `SoftwareApplication` JSON-LD added to `index.html` | 🟢 Good |
 | Trust signals | No testimonials/press — reasonable for an early project | 🟡 Needs attention |
-| Factual density | Specific claims (AES-256-GCM, HMAC, JWT, $5/mo) — strong once crawlable | 🟢 Good |
-| Clear claims up front | Hero states value prop plainly | 🟢 Good |
-| Entity clarity | Minor "doco-pilot" vs "DocoPilot" inconsistency | 🟡 Needs attention |
-| Comprehensiveness / originality | Honest comparison table vs. named competitors is genuinely citable | 🟢 Good |
-| Crawlability (JS rendering) | Fully client-rendered, no SSR/pre-render fallback | 🔴 Missing |
+| Factual density | Specific claims (AES-256-GCM, HMAC, JWT, $5/mo) — now crawlable | 🟢 Good |
+| Clear claims up front | Hero states value prop plainly, now with an explicit definition sentence | 🟢 Good |
+| Entity clarity | Fixed — brand mentions in prose standardized to "DocoPilot" (technical identifiers like `docker run doco-pilot/agent` stay lowercase, correctly) | 🟢 Good |
+| Comprehensiveness / originality | Honest comparison table vs. named competitors, now crawlable | 🟢 Good |
+| Crawlability (JS rendering) | Fixed — landing page prerendered to static HTML at build time | 🟢 Good |
 
 ### AEO
 
 | Signal | Finding | Status |
 |---|---|---|
-| Direct-answer paragraphs | Good quotable lines exist but not under question headings | 🟡 Needs attention |
-| Definition pattern ("X is...") | No plain definition sentence near the top | 🟡 Needs attention |
-| List / table content | Comparison table is a strong snippet candidate | 🟢 Good |
-| FAQ schema | None | 🔴 Missing |
-| HowTo schema | 3-step setup flow is HowTo-shaped but unmarked | 🔴 Missing |
-| Question-phrased headings | All headings are statements | 🟡 Needs attention |
+| Direct-answer paragraphs | Good quotable lines exist, now crawlable; still not all under question headings | 🟡 Needs attention |
+| Definition pattern ("X is...") | Fixed — plain definition sentence added to hero | 🟢 Good |
+| List / table content | Comparison table is a strong snippet candidate, now crawlable | 🟢 Good |
+| FAQ schema | Fixed — FAQ section + `FAQPage` JSON-LD added, now crawlable | 🟢 Good |
+| HowTo schema | Fixed — `HowTo` JSON-LD added for the 3-step setup flow | 🟢 Good |
+| Question-phrased headings | Fixed for FAQ section (5 questions); other section headings are still statements | 🟡 Needs attention |
 
 ---
 
@@ -130,3 +133,7 @@ Only #5 remains open — turning `#pricing` / `#compare` / `#security` anchors i
 - **2026-09-22** — Fixed #3 (the critical one): added `client/scripts/prerender.js`, run automatically via `npm run build` (now `vite build && npm run prerender`). It uses `react-dom/server`'s `renderToStaticMarkup` (via `vite-node`, so JSX/CSS imports resolve) to render `Landing.jsx` at build time and injects the resulting HTML into `dist/index.html`'s `<div id="root">`. The client still hydrates normally on top of it via `createRoot` in `main.jsx` — no behavior change for real users, but `view-source:` and crawlers now see the full landing page (hero, features, security, comparison table, pricing, FAQ + FAQPage schema) instead of an empty div. Verified via `npm run preview`: homepage returns HTTP 200 with ~19.5KB of real HTML (up from 3.5KB), and the FAQPage JSON-LD is present in the served page source.
 - **2026-09-22** — Scores re-estimated post-fix: SEO ~7/10, GEO ~7/10, AEO ~6/10 (informal re-check, not a full re-audit). Remaining gap is almost entirely #5.
 - **2026-09-22** — Fixed a lint regression the prerender work introduced: the first version of `scripts/prerender.js` used `vite-node`, whose SSR JSX transform didn't apply the project's automatic JSX runtime, forcing an explicit (and then unused-per-ESLint) `import React from "react"` in `Landing.jsx`. Replaced the approach with `vite build --ssr scripts/prerender.js` (bundled through the same plugin pipeline as the real app build, output to a temp `.prerender/` dir that's deleted after running), which needs no source workarounds. `Landing.jsx`'s import is back to normal. Verified clean: `npm run lint` (0 errors), `npm test` (41/41 passing), `npm run build` (dist/index.html still ~19.5KB prerendered).
+- **2026-09-22** — Synced the "Detailed findings" tables (SEO/GEO/AEO signal-by-signal) with the priority fix list — they still showed original audit-day status for items already fixed. While updating, found two real gaps not previously tracked: **#10** no HowTo schema on the 3-step setup flow, and **#11** inconsistent brand casing ("DocoPilot" in title/nav vs "doco-pilot" in body copy). Added both to the priority fix list.
+- **2026-09-22** — Fixed #10: added `HowTo` JSON-LD schema (3 `HowToStep`s matching the visible "Register → Run agent → Manage" flow) to `Landing.jsx`, right after the "how" section.
+- **2026-09-22** — Fixed #11: standardized brand mentions in prose to "DocoPilot" across the hero, setup steps, comparison section, status banner, and FAQ (both visible text and the FAQPage JSON-LD, kept in sync). Left technical identifiers as-is where lowercase is actually correct: `docker run doco-pilot/agent` (a real command), the GitHub URL, `doco-pilot.vercel.app`, `console.doco-pilot`, and image filenames.
+- **2026-09-22** — Verified clean after #10/#11: `npm run lint` (0 errors), `npm test` (41/41 passing), `npm run build` (dist/index.html contains both FAQPage and HowTo schema, and "What is DocoPilot?" instead of the old lowercase phrasing).

@@ -78,7 +78,7 @@ export default function Landing() {
             Your Docker fleet,<br />watched and run<br />from <span className="accent">one console.</span>
           </h1>
           <p className="sub">
-            <strong>doco-pilot is a hosted control plane for managing and monitoring Docker containers
+            <strong>DocoPilot is a hosted control plane for managing and monitoring Docker containers
             across every VPS you run.</strong> Drop a lightweight agent on each host, and get live
             containers, images, metrics, and alerts in one place — without ever opening the Docker
             socket to the internet.
@@ -181,7 +181,7 @@ export default function Landing() {
             <div className="step">
               <div className="num">1</div>
               <h3>Register a server</h3>
-              <p>Add a host in the console. doco-pilot generates a unique agent key pair, hashed and encrypted at rest.</p>
+              <p>Add a host in the console. DocoPilot generates a unique agent key pair, hashed and encrypted at rest.</p>
             </div>
             <div className="step">
               <div className="num">2</div>
@@ -199,6 +199,35 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <script type="application/ld+json">
+        {JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "HowTo",
+          "name": "How to connect a server to DocoPilot",
+          "description": "Register a host, run the DocoPilot agent on it, and manage it from the browser — the agent always dials out, so no inbound port or exposed Docker socket is required.",
+          "step": [
+            {
+              "@type": "HowToStep",
+              "position": 1,
+              "name": "Register a server",
+              "text": "Add a host in the console. DocoPilot generates a unique agent key pair, hashed and encrypted at rest.",
+            },
+            {
+              "@type": "HowToStep",
+              "position": 2,
+              "name": "Run the agent",
+              "text": "Paste the generated command on your VPS. It mounts the Docker socket locally and opens an outbound WebSocket only.",
+            },
+            {
+              "@type": "HowToStep",
+              "position": 3,
+              "name": "Manage from the browser",
+              "text": "The server relays your actions to the agent and streams back state, logs, and metrics in real time.",
+            },
+          ],
+        })}
+      </script>
 
       <section id="security">
         <div className="wrap">
@@ -226,13 +255,13 @@ export default function Landing() {
         <div className="wrap">
           <div className="section-head">
             <div className="eyebrow">Honest comparison</div>
-            <h2>Where doco-pilot fits.</h2>
+            <h2>Where DocoPilot fits.</h2>
             <p>We're a fleet monitoring &amp; management console, the same job as Portainer — not a deploy platform like Coolify or Dokploy. We won't pretend to do their job.</p>
           </div>
           <div className="compare-wrap">
             <table className="compare">
               <thead>
-                <tr><th>Capability</th><th>doco-pilot</th><th>Portainer</th><th>Coolify / Dokploy</th></tr>
+                <tr><th>Capability</th><th>DocoPilot</th><th>Portainer</th><th>Coolify / Dokploy</th></tr>
               </thead>
               <tbody>
                 <tr><td className="feature-col">No inbound port on managed host</td><td className="us yes">✓ dial-out agent</td><td className="yes">✓ Edge tunnel</td><td className="no">SSH-based</td></tr>
@@ -242,7 +271,7 @@ export default function Landing() {
                 <tr><td className="feature-col">Zero-install control plane</td><td className="us yes">✓ hosted for you</td><td className="no">self-run</td><td className="no">self-run</td></tr>
                 <tr><td className="feature-col">Docker Compose / stack deploy</td><td className="us no">—</td><td className="yes">✓</td><td className="yes">✓ core job</td></tr>
                 <tr><td className="feature-col">Git-based deploy / CI</td><td className="us no">—</td><td className="no">—</td><td className="yes">✓</td></tr>
-                <tr className="note-row"><td colSpan={4}>doco-pilot doesn't build or deploy your apps — it manages and monitors what's already running. If you need Git-push deploys, Coolify or Dokploy is the right tool for that job.</td></tr>
+                <tr className="note-row"><td colSpan={4}>DocoPilot doesn't build or deploy your apps — it manages and monitors what's already running. If you need Git-push deploys, Coolify or Dokploy is the right tool for that job.</td></tr>
               </tbody>
             </table>
           </div>
@@ -294,7 +323,7 @@ export default function Landing() {
             <strong style={{ color: "var(--lp-accent)" }}>●</strong>
             <div>
               <strong>Early and honest.</strong>
-              <p>doco-pilot is an active open-source project without a tagged stable release yet. Core flows — auth, servers, agents, containers, images, live stats — work today. A few chrome elements in the UI are still catching up, and Pro billing hasn't launched yet either — the Free plan is the only thing you can sign up for right now. We'd rather tell you that now than have you find out later.</p>
+              <p>DocoPilot is an active open-source project without a tagged stable release yet. Core flows — auth, servers, agents, containers, images, live stats — work today. A few chrome elements in the UI are still catching up, and Pro billing hasn't launched yet either — the Free plan is the only thing you can sign up for right now. We'd rather tell you that now than have you find out later.</p>
             </div>
           </div>
         </div>
@@ -308,23 +337,23 @@ export default function Landing() {
           </div>
           <div className="faq-list">
             <div className="faq-item">
-              <h3>What is doco-pilot?</h3>
-              <p>doco-pilot is a hosted control plane for managing and monitoring Docker containers across every VPS you run — live containers, images, metrics, and alerts in one console.</p>
+              <h3>What is DocoPilot?</h3>
+              <p>DocoPilot is a hosted control plane for managing and monitoring Docker containers across every VPS you run — live containers, images, metrics, and alerts in one console.</p>
             </div>
             <div className="faq-item">
-              <h3>How is doco-pilot different from Portainer?</h3>
-              <p>doco-pilot and Portainer do the same core job — fleet monitoring and container management. The difference is how they connect: doco-pilot's agent always dials out from your VPS, so you never open an inbound port, and the console itself is hosted for you instead of something you run and maintain.</p>
+              <h3>How is DocoPilot different from Portainer?</h3>
+              <p>DocoPilot and Portainer do the same core job — fleet monitoring and container management. The difference is how they connect: DocoPilot's agent always dials out from your VPS, so you never open an inbound port, and the console itself is hosted for you instead of something you run and maintain.</p>
             </div>
             <div className="faq-item">
               <h3>Is my Docker socket exposed to the internet?</h3>
               <p>No. The agent is the only thing that talks to your Docker socket, and it always initiates the connection outward over a TLS-verified, HMAC-signed WebSocket. Nothing about your Docker socket ever touches the public internet.</p>
             </div>
             <div className="faq-item">
-              <h3>Does doco-pilot deploy or build my applications?</h3>
-              <p>No. doco-pilot manages and monitors containers that are already running — it doesn't build images or handle Git-based deploys. If you need Git-push deploys, tools like Coolify or Dokploy are the right fit for that job.</p>
+              <h3>Does DocoPilot deploy or build my applications?</h3>
+              <p>No. DocoPilot manages and monitors containers that are already running — it doesn't build images or handle Git-based deploys. If you need Git-push deploys, tools like Coolify or Dokploy are the right fit for that job.</p>
             </div>
             <div className="faq-item">
-              <h3>How much does doco-pilot cost?</h3>
+              <h3>How much does DocoPilot cost?</h3>
               <p>The Free plan covers up to 2 servers with 7 days of history and is fully live today, at $0. A Pro plan at $5/month with unlimited servers and team members is coming soon — sign up free now to be first in line.</p>
             </div>
           </div>
@@ -338,18 +367,18 @@ export default function Landing() {
           "mainEntity": [
             {
               "@type": "Question",
-              "name": "What is doco-pilot?",
+              "name": "What is DocoPilot?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "doco-pilot is a hosted control plane for managing and monitoring Docker containers across every VPS you run — live containers, images, metrics, and alerts in one console.",
+                "text": "DocoPilot is a hosted control plane for managing and monitoring Docker containers across every VPS you run — live containers, images, metrics, and alerts in one console.",
               },
             },
             {
               "@type": "Question",
-              "name": "How is doco-pilot different from Portainer?",
+              "name": "How is DocoPilot different from Portainer?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "doco-pilot and Portainer do the same core job — fleet monitoring and container management. The difference is how they connect: doco-pilot's agent always dials out from your VPS, so you never open an inbound port, and the console itself is hosted for you instead of something you run and maintain.",
+                "text": "DocoPilot and Portainer do the same core job — fleet monitoring and container management. The difference is how they connect: DocoPilot's agent always dials out from your VPS, so you never open an inbound port, and the console itself is hosted for you instead of something you run and maintain.",
               },
             },
             {
@@ -362,15 +391,15 @@ export default function Landing() {
             },
             {
               "@type": "Question",
-              "name": "Does doco-pilot deploy or build my applications?",
+              "name": "Does DocoPilot deploy or build my applications?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "No. doco-pilot manages and monitors containers that are already running — it doesn't build images or handle Git-based deploys. If you need Git-push deploys, tools like Coolify or Dokploy are the right fit for that job.",
+                "text": "No. DocoPilot manages and monitors containers that are already running — it doesn't build images or handle Git-based deploys. If you need Git-push deploys, tools like Coolify or Dokploy are the right fit for that job.",
               },
             },
             {
               "@type": "Question",
-              "name": "How much does doco-pilot cost?",
+              "name": "How much does DocoPilot cost?",
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "The Free plan covers up to 2 servers with 7 days of history and is fully live today, at $0. A Pro plan at $5/month with unlimited servers and team members is coming soon.",
