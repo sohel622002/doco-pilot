@@ -114,6 +114,19 @@ export const handleSocketMessages = (rawData) => {
         case WS_ACTIONS.IMAGES_PRUNE_RESULT:
           window.dispatchEvent(new CustomEvent("images:pruned", { detail: message?.data }));
           break;
+        case WS_ACTIONS.IMAGES_PULL_RESULT:
+          window.dispatchEvent(new CustomEvent("images:pulled", { detail: message?.data }));
+          break;
+        case WS_ACTIONS.IMAGES_REMOVE_RESULT:
+          window.dispatchEvent(new CustomEvent("images:removed", { detail: message?.data }));
+          break;
+        case WS_ACTIONS.DOCKER_ERROR:
+          // The agent replies with this generic type (not a per-action
+          // "…:result") when an action throws — e.g. a pull for a tag that
+          // doesn't exist. Let pages key off `action` to reset their own
+          // loading state instead of it spinning until a fixed timeout.
+          window.dispatchEvent(new CustomEvent("docker:error", { detail: message }));
+          break;
         case WS_ACTIONS.CONTAINERS_STATS_RESULT:
           useContainerStore.getState().setStats(message?.data);
           break;

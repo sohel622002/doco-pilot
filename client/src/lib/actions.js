@@ -46,6 +46,7 @@ export const WS_ACTIONS = {
     NETWORKS_REMOVE_RESULT : 'networks:remove:result',
     SYSTEM_STATS_RESULT : 'system:stats:result',
     DOCKER_EVENT : 'docker:event',
+    DOCKER_ERROR : 'docker:error',
     AGENT_ONLINE : 'agent:online',
     AGENT_OFFLINE : 'agent:offline',
     // Interactive exec (shell-in-container)

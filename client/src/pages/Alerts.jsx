@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
@@ -24,11 +24,21 @@ function AlertRuleConfig({ serverId }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Guards against the initial fetch resolving after the user has already
+  // started editing — without this, a fast edit (or just a fast network
+  // response) gets silently wiped by the load completing late.
+  const editedRef = useRef(false);
+
   useEffect(() => {
+    let cancelled = false;
     api.get(`/api/servers/${serverId}`).then((res) => {
+      if (cancelled || editedRef.current) return;
       setWebhookUrl(res.data?.server?.alert_webhook_url || "");
       setCpuThreshold(res.data?.server?.alert_cpu_threshold ?? 90);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [serverId]);
 
   const onSubmit = async (e) => {
@@ -75,7 +85,10 @@ function AlertRuleConfig({ serverId }) {
             placeholder="https://hooks.slack.com/services/…"
             className="w-full h-10 px-space-sm bg-surface-container border border-outline-variant rounded-md font-code text-code text-on-surface outline-none focus:border-outline"
             value={webhookUrl}
-            onChange={(e) => setWebhookUrl(e.target.value)}
+            onChange={(e) => {
+              editedRef.current = true;
+              setWebhookUrl(e.target.value);
+            }}
           />
         </div>
         <div className="space-y-space-xs">
@@ -88,7 +101,10 @@ function AlertRuleConfig({ serverId }) {
             max={99}
             className="w-full h-10 px-space-sm bg-surface-container border border-outline-variant rounded-md font-body-main text-on-surface outline-none focus:border-outline"
             value={cpuThreshold}
-            onChange={(e) => setCpuThreshold(e.target.value)}
+            onChange={(e) => {
+              editedRef.current = true;
+              setCpuThreshold(e.target.value);
+            }}
           />
         </div>
         <div className="col-span-3 flex items-center justify-between mt-space-xs">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Lock, Pencil, ShieldCheck, ShieldAlert } from "lucide-react";
+import { User, Lock, Pencil, ShieldCheck, ShieldAlert, LogOut } from "lucide-react";
 import api from "../lib/axios";
 import { Card, Button, Modal } from "../components/ui";
 
@@ -132,12 +132,14 @@ function ChangePasswordForm() {
 }
 
 export default function Profile() {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [emailVerified, setEmailVerified] = useState(true);
   const [resendState, setResendState] = useState("idle"); // idle | sending | sent
   const [profileOpen, setProfileOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     api.get("/api/auth/me").then((res) => {
@@ -154,6 +156,17 @@ export default function Profile() {
       setResendState("sent");
     } catch {
       setResendState("idle");
+    }
+  };
+
+  const onLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await api.post("/api/auth/logout");
+    } catch (err) {
+      console.error("Failed to log out:", err);
+    } finally {
+      navigate("/login");
     }
   };
 
@@ -217,6 +230,19 @@ export default function Profile() {
             <div className="flex items-center gap-space-sm">
               <Lock size={16} className="text-primary" />
               <span className="font-body-main text-body-main text-on-surface">Change Password</span>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={onLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center justify-between py-space-sm text-left hover:text-error transition-colors disabled:opacity-50"
+          >
+            <div className="flex items-center gap-space-sm">
+              <LogOut size={16} className="text-error" />
+              <span className="font-body-main text-body-main text-error">
+                {loggingOut ? "Logging out…" : "Log Out"}
+              </span>
             </div>
           </button>
         </div>

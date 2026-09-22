@@ -38,3 +38,8 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright
+e2e/playwright-report/
+e2e/test-results/
+e2e/blob-report/

@@ -51,17 +51,43 @@ export default function Images() {
     refreshDiskUsage();
   }, [serverId, isConnected]);
 
+  const [pullError, setPullError] = useState("");
+
   useEffect(() => {
     const handler = () => {
       setPruning(false);
       refreshImages();
       refreshDiskUsage();
     };
+    const handlePullResult = () => {
+      setPulling(false);
+      refreshImages();
+      refreshDiskUsage();
+    };
+    const handleRemoveResult = () => {
+      refreshImages();
+      refreshDiskUsage();
+    };
+    const handleDockerError = (event) => {
+      const action = event.detail?.action;
+      if (action === WS_ACTIONS.IMAGES_PULL) {
+        setPulling(false);
+        setPullError(event.detail?.error || "Pull failed");
+      } else if (action === WS_ACTIONS.IMAGES_PRUNE) {
+        setPruning(false);
+      }
+    };
     window.addEventListener("images:pruned", handler);
     window.addEventListener("images:built", handler);
+    window.addEventListener("images:pulled", handlePullResult);
+    window.addEventListener("images:removed", handleRemoveResult);
+    window.addEventListener("docker:error", handleDockerError);
     return () => {
       window.removeEventListener("images:pruned", handler);
       window.removeEventListener("images:built", handler);
+      window.removeEventListener("images:pulled", handlePullResult);
+      window.removeEventListener("images:removed", handleRemoveResult);
+      window.removeEventListener("docker:error", handleDockerError);
     };
   }, [serverId]);
 
@@ -74,22 +100,14 @@ export default function Images() {
   const handlePull = (e) => {
     e.preventDefault();
     if (!pullValue.trim()) return;
+    setPullError("");
     setPulling(true);
     sendMessage({ action: WS_ACTIONS.IMAGES_PULL, imageName: pullValue.trim(), serverId });
     setPullValue("");
-    setTimeout(() => {
-      setPulling(false);
-      refreshImages();
-      refreshDiskUsage();
-    }, 3000);
   };
 
   const handleRemove = (imageId) => {
     sendMessage({ action: WS_ACTIONS.IMAGES_REMOVE, imageId, serverId });
-    setTimeout(() => {
-      refreshImages();
-      refreshDiskUsage();
-    }, 1000);
   };
 
   return (
@@ -140,6 +158,7 @@ export default function Images() {
             {pruning ? "Pruning…" : `Prune Unused (${danglingImages.length})`}
           </button>
         </form>
+        {pullError && <p className="text-error text-body-main">{pullError}</p>}
       </div>
       {/* <!-- Dashboard Stats Row --> */}
       <div className="grid grid-cols-4 gap-3 mb-3">

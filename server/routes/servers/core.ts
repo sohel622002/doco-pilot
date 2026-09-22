@@ -13,6 +13,7 @@ import * as serverRepo from '../../repositories/serverRepository.js'
 import * as billingRepo from '../../repositories/billingRepository.js'
 import { limitsFor } from '../../config/plans.js'
 import { env } from '../../env.js'
+import { agentSockets } from '../../ws/state.js'
 
 const router = Router()
 
@@ -232,6 +233,17 @@ router.delete('/:id', async (req, res) => {
   const { error } = await serverRepo.deleteServer(req.params.id)
 
   if (error) return res.status(500).json({ error: 'Failed to delete server' })
+
+  // Otherwise the agent keeps streaming docker:event/system:stats messages
+  // over its still-open connection, and every one fails to persist — a
+  // foreign key violation against the row we just deleted — until the
+  // agent happens to reconnect on its own and gets rejected for revoked
+  // credentials. Disconnect it immediately instead of waiting for that.
+  const agentWs = agentSockets.get(req.params.id)
+  if (agentWs) {
+    agentWs.close(4004, 'Server deleted')
+    agentSockets.delete(req.params.id)
+  }
 
   auditLog({ req, action: 'server:delete', target: req.params.id })
   res.json({ message: 'Server deleted' })

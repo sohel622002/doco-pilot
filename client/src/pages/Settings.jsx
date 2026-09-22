@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { BookOpen } from "lucide-react";
 import api from "../lib/axios";
 import { Card } from "../components/ui";
@@ -31,6 +32,7 @@ function ServerSetupSection() {
 function DangerZoneSection() {
   const { serverId } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState(false);
 
   const handleDeleteServer = async () => {
@@ -40,6 +42,10 @@ function DangerZoneSection() {
     setDeleting(true);
     try {
       await api.delete(`/api/servers/${serverId}`);
+      // Without this, RootRedirect's useServers() reads the stale cached
+      // list (still containing the server we just deleted) and redirects
+      // straight back into it instead of the next valid destination.
+      await queryClient.invalidateQueries({ queryKey: ["servers"] });
       navigate("/dashboard");
     } catch (err) {
       console.error("Failed to delete server:", err);
