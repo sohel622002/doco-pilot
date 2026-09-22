@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run prerender",
+    "prerender": "vite build --ssr scripts/prerender.js --outDir .prerender --emptyOutDir && node .prerender/prerender.js && node -e \"require('fs').rmSync('.prerender',{recursive:true,force:true})\"",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run"
